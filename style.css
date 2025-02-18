@@ -1,0 +1,97 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f9fc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+label {
+    font-size: 20px;
+    color: #555;
+    display: block;
+    margin-top: 15px;
+}
+
+input[type="number"],
+select {
+    width: 100%;
+    padding: 16px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 18px;
+    background-color: #f0f0f0;
+}
+
+textarea {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 18px;
+    background-color: #f0f0f0;
+    resize: vertical;
+}
+
+button {
+    background-color: #007acc;
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 20px;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #005a99;
+}
+
+#result {
+    margin-top: 30px;
+}
+
+#qrcode {
+    margin: 20px auto;
+    width: 256px;
+    height: 256px;
+}
+
+#result p {
+    font-size: 22px;
+    color: #333;
+    margin: 10px 0;
+}
+
+span {
+    font-size: 18px;
+    margin-left: 10px;
+}
+
+#qrText {
+    text-align: left;
+    font-size: 14px;
+    color: #555;
+    margin-top: 10px;
+}
