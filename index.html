@@ -18,6 +18,8 @@
             <option value="" disabled selected>選択してください</option>
             <option value="bmi">BMI</option>
             <option value="meal">食事内容</option>
+            <option value="ipss">IPSSスコア</option>
+            <option value="ipssSlider">IPSSスコア（スライダーバー）</option>
         </select>
 
         <form id="bmiForm" class="form-section" style="display: none;">
@@ -38,13 +40,168 @@
         <form id="mealForm" class="form-section" style="display: none;">
             <label for="mainDish">主食摂取量:</label>
             <input type="range" id="mainDish" min="0" max="10" step="1" value="0" required>
-            <span id="mainDishValue">0</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>摂取なし</span>
+                <span id="mainDishValue">0</span>
+                <span>完食</span>
+            </div>
+
             <label for="sideDish">副食摂取量:</label>
             <input type="range" id="sideDish" min="0" max="10" step="1" value="0" required>
-            <span id="sideDishValue">0</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>摂取なし</span>
+                <span id="sideDishValue">0</span>
+                <span>完食</span>
+            </div>
+
             <label for="notes">その他伝えたいこと:</label>
             <textarea id="notes" rows="3"></textarea>
             <button type="button" id="confirmButton">確定</button>
+        </form>
+
+        <form id="ipssForm" class="form-section" style="display: none;">
+            <label for="ipssQuestion1">この1か月の間に、尿をしたあとにまだ尿が残っている感じがありましたか</label>
+            <select id="ipssQuestion1" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">全くない</option>
+                <option value="1">5回に1回の割合より少ない</option>
+                <option value="2">2回に1回の割合より少ない</option>
+                <option value="3">2回に1回の割合くらい</option>
+                <option value="4">2回に1回の割合より多い</option>
+                <option value="5">ほとんどいつも</option>
+            </select>
+
+            <label for="ipssQuestion2">この1か月の間に、尿をしてから2時間以内にもう一度しなくてはならないことがありましたか</label>
+            <select id="ipssQuestion2" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">全くない</option>
+                <option value="1">5回に1回の割合より少ない</option>
+                <option value="2">2回に1回の割合より少ない</option>
+                <option value="3">2回に1回の割合くらい</option>
+                <option value="4">2回に1回の割合より多い</option>
+                <option value="5">ほとんどいつも</option>
+            </select>
+
+            <label for="ipssQuestion3">この1か月の間に、尿をしている間に尿が何度もとぎれることがありましたか</label>
+            <select id="ipssQuestion3" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">全くない</option>
+                <option value="1">5回に1回の割合より少ない</option>
+                <option value="2">2回に1回の割合より少ない</option>
+                <option value="3">2回に1回の割合くらい</option>
+                <option value="4">2回に1回の割合より多い</option>
+                <option value="5">ほとんどいつも</option>
+            </select>
+
+            <label for="ipssQuestion4">この1か月の間に、尿を我慢するのが難しいことがありましたか</label>
+            <select id="ipssQuestion4" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">全くない</option>
+                <option value="1">5回に1回の割合より少ない</option>
+                <option value="2">2回に1回の割合より少ない</option>
+                <option value="3">2回に1回の割合くらい</option>
+                <option value="4">2回に1回の割合より多い</option>
+                <option value="5">ほとんどいつも</option>
+            </select>
+
+            <label for="ipssQuestion5">この1か月の間に、尿の勢いが弱いことがありましたか</label>
+            <select id="ipssQuestion5" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">全くない</option>
+                <option value="1">5回に1回の割合より少ない</option>
+                <option value="2">2回に1回の割合より少ない</option>
+                <option value="3">2回に1回の割合くらい</option>
+                <option value="4">2回に1回の割合より多い</option>
+                <option value="5">ほとんどいつも</option>
+            </select>
+
+            <label for="ipssQuestion6">この1か月の間に、尿をし始めるためにおなかに力を入れることがありましたか</label>
+            <select id="ipssQuestion6" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">全くない</option>
+                <option value="1">5回に1回の割合より少ない</option>
+                <option value="2">2回に1回の割合より少ない</option>
+                <option value="3">2回に1回の割合くらい</option>
+                <option value="4">2回に1回の割合より多い</option>
+                <option value="5">ほとんどいつも</option>
+            </select>
+
+            <label for="ipssQuestion7">この1か月の間に、夜寝てから朝起きるまでに、ふつう何回尿をするために起きましたか</label>
+            <select id="ipssQuestion7" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">0回</option>
+                <option value="1">1回</option>
+                <option value="2">2回</option>
+                <option value="3">3回</option>
+                <option value="4">4回</option>
+                <option value="5">5回以上</option>
+            </select>
+
+            <label for="qolQuestion">現在の尿の状態がこのまま変わらずに続くとしたら、どう思いますか</label>
+            <select id="qolQuestion" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="0">とても満足</option>
+                <option value="1">満足</option>
+                <option value="2">ほぼ満足</option>
+                <option value="3">なんともいえない</option>
+                <option value="4">やや不満</option>
+                <option value="5">いやだ</option>
+                <option value="6">とてもいやだ</option>
+            </select>
+
+            <button type="button" id="ipssConfirmButton">確定</button>
+        </form>
+
+        <form id="ipssSliderForm" class="form-section" style="display: none;">
+            <label for="ipssSliderQuestion1">この1か月の間に、尿をしたあとにまだ尿が残っている感じがありましたか</label>
+            <input type="range" id="ipssSliderQuestion1" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion1Value">全くない</span>
+            </div>
+
+            <label for="ipssSliderQuestion2">この1か月の間に、尿をしてから2時間以内にもう一度しなくてはならないことがありましたか</label>
+            <input type="range" id="ipssSliderQuestion2" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion2Value">全くない</span>
+            </div>
+
+            <label for="ipssSliderQuestion3">この1か月の間に、尿をしている間に尿が何度もとぎれることがありましたか</label>
+            <input type="range" id="ipssSliderQuestion3" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion3Value">全くない</span>
+            </div>
+
+            <label for="ipssSliderQuestion4">この1か月の間に、尿を我慢するのが難しいことがありましたか</label>
+            <input type="range" id="ipssSliderQuestion4" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion4Value">全くない</span>
+            </div>
+
+            <label for="ipssSliderQuestion5">この1か月の間に、尿の勢いが弱いことがありましたか</label>
+            <input type="range" id="ipssSliderQuestion5" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion5Value">全くない</span>
+            </div>
+
+            <label for="ipssSliderQuestion6">この1か月の間に、尿をし始めるためにおなかに力を入れることがありましたか</label>
+            <input type="range" id="ipssSliderQuestion6" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion6Value">全くない</span>
+            </div>
+
+            <label for="ipssSliderQuestion7">この1か月の間に、夜寝てから朝起きるまでに、ふつう何回尿をするために起きましたか</label>
+            <input type="range" id="ipssSliderQuestion7" min="0" max="5" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="ipssSliderQuestion7Value">0回</span>
+            </div>
+
+            <label for="qolSliderQuestion">現在の尿の状態がこのまま変わらずに続くとしたら、どう思いますか</label>
+            <input type="range" id="qolSliderQuestion" min="0" max="6" step="1" value="0" required>
+            <div style="text-align: center;">
+                <span id="qolSliderQuestionValue">とても満足</span>
+            </div>
+
+            <button type="button" id="ipssSliderConfirmButton">確定</button>
         </form>
 
         <div id="result">

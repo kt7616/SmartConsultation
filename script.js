@@ -7,11 +7,58 @@ $(document).ready(function() {
         $('#qrcode').html('');
         $('#qrText').html('');
 
-        if ($(this).val() === 'bmi') {
+        // 項目選択のメッセージとプルダウンを非表示にする
+        $('#selection').prev('label').hide();
+        $('#selection').hide();
+
+        // タイトルを変更する
+        const selectedValue = $(this).val();
+        let titleText = 'スマート問診アプリ';
+        if (selectedValue === 'bmi') {
+            titleText = 'BMI';
             $('#bmiForm').show();
-        } else if ($(this).val() === 'meal') {
+        } else if (selectedValue === 'meal') {
+            titleText = '食事内容';
             $('#mealForm').show();
+        } else if (selectedValue === 'ipss' || selectedValue === 'ipssSlider') {
+            titleText = 'IPSSスコア';
+            if (selectedValue === 'ipss') {
+                $('#ipssForm').show();
+            } else {
+                $('#ipssSliderForm').show();
+            }
         }
+        $('h1').text(titleText); // タイトルを更新
+    });
+
+    const ipssDescriptions = [
+        "全くない", "5回に1回の割合より少ない", "2回に1回の割合より少ない",
+        "2回に1回の割合くらい", "2回に1回の割合より多い", "ほとんどいつも"
+    ];
+
+    const ipssNightDescriptions = [
+        "0回", "1回", "2回", "3回", "4回", "5回以上"
+    ];
+
+    const qolDescriptions = [
+        "とても満足", "満足", "ほぼ満足", "なんともいえない",
+        "やや不満", "いやだ", "とてもいやだ"
+    ];
+
+    $('#ipssSliderQuestion1, #ipssSliderQuestion2, #ipssSliderQuestion3, #ipssSliderQuestion4, #ipssSliderQuestion5, #ipssSliderQuestion6').on('input', function() {
+        const id = $(this).attr('id');
+        const value = $(this).val();
+        $(`#${id}Value`).text(ipssDescriptions[value]);
+    });
+
+    $('#ipssSliderQuestion7').on('input', function() {
+        const value = $(this).val();
+        $('#ipssSliderQuestion7Value').text(ipssNightDescriptions[value]);
+    });
+
+    $('#qolSliderQuestion').on('input', function() {
+        const value = $(this).val();
+        $('#qolSliderQuestionValue').text(qolDescriptions[value]);
     });
 
     $('#bmiForm').on('submit', function(event) {
@@ -61,10 +108,79 @@ $(document).ready(function() {
             return;
         }
 
+        const today = new Date();
+        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+
         const message = `主食：${mainDish}　副食：${sideDish}　自由記載：${notes}`;
         $('#bmiValue').html(message);
 
-        const qrData = `文書コード：999002\n主食：${mainDish}　副食：${sideDish}　自由記載：${notes}`;
+        const qrData = `文書コード：999002\n入力日：${dateString}\n主食：${mainDish}　副食：${sideDish}　自由記載：${notes}`;
+        const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
+
+        generateQRCode(encodedData);
+        $('#qrText').html(qrData.replace(/\n/g, '<br>'));
+    });
+
+    $('#ipssConfirmButton').click(function() {
+        const ipssScores = [
+            parseInt($('#ipssQuestion1').val()),
+            parseInt($('#ipssQuestion2').val()),
+            parseInt($('#ipssQuestion3').val()),
+            parseInt($('#ipssQuestion4').val()),
+            parseInt($('#ipssQuestion5').val()),
+            parseInt($('#ipssQuestion6').val()),
+            parseInt($('#ipssQuestion7').val())
+        ];
+
+        const qolScore = parseInt($('#qolQuestion').val());
+
+        if (ipssScores.includes(NaN) || isNaN(qolScore)) {
+            alert('全ての項目を入力してください。');
+            return;
+        }
+
+        const today = new Date();
+        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+
+        const ipssTotal = ipssScores.reduce((a, b) => a + b, 0);
+        const ipssScoresText = `IPSS：${ipssScores.join('-')}`;
+        const message = `${ipssScoresText}<br>IPSS合計点：${ipssTotal}点<br>QOLスコア：${qolScore}点`;
+        $('#bmiValue').html(message);
+
+        const qrData = `文書コード：999003\n入力日：${dateString}\n${ipssScoresText}\nIPSS合計点：${ipssTotal}点\nQOLスコア：${qolScore}点`;
+        const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
+
+        generateQRCode(encodedData);
+        $('#qrText').html(qrData.replace(/\n/g, '<br>'));
+    });
+
+    $('#ipssSliderConfirmButton').click(function() {
+        const ipssScores = [
+            parseInt($('#ipssSliderQuestion1').val()),
+            parseInt($('#ipssSliderQuestion2').val()),
+            parseInt($('#ipssSliderQuestion3').val()),
+            parseInt($('#ipssSliderQuestion4').val()),
+            parseInt($('#ipssSliderQuestion5').val()),
+            parseInt($('#ipssSliderQuestion6').val()),
+            parseInt($('#ipssSliderQuestion7').val())
+        ];
+
+        const qolScore = parseInt($('#qolSliderQuestion').val());
+
+        if (ipssScores.includes(NaN) || isNaN(qolScore)) {
+            alert('全ての項目を入力してください。');
+            return;
+        }
+
+        const today = new Date();
+        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+
+        const ipssTotal = ipssScores.reduce((a, b) => a + b, 0);
+        const ipssScoresText = `IPSS：${ipssScores.join('-')}`;
+        const message = `${ipssScoresText}<br>IPSS合計点：${ipssTotal}点<br>QOLスコア：${qolScore}点`;
+        $('#bmiValue').html(message);
+
+        const qrData = `文書コード：999004\n入力日：${dateString}\n${ipssScoresText}\nIPSS合計点：${ipssTotal}点\nQOLスコア：${qolScore}点`;
         const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
 
         generateQRCode(encodedData);
