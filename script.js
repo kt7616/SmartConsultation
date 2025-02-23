@@ -88,6 +88,11 @@ $(document).ready(function() {
 
         generateQRCode(encodedData);
         $('#qrText').html(qrData.replace(/\n/g, '<br>'));
+        
+        // メールリンクを追加
+        const mailBody = encodeURIComponent(qrData);
+        const mailLink = `<a href="mailto:example@example.com?subject=BMI測定結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
+        $('#mailLink').html(mailLink);
     });
 
     $('#mainDish').on('input', function() {
@@ -119,6 +124,11 @@ $(document).ready(function() {
 
         generateQRCode(encodedData);
         $('#qrText').html(qrData.replace(/\n/g, '<br>'));
+
+        // メールリンクを追加
+        const mailBody = encodeURIComponent(qrData);
+        const mailLink = `<a href="mailto:example@example.com?subject=食事内容記録&body=${mailBody}" class="mail-link">メールで送信</a>`;
+        $('#mailLink').html(mailLink);
     });
 
     $('#ipssConfirmButton').click(function() {
@@ -152,6 +162,11 @@ $(document).ready(function() {
 
         generateQRCode(encodedData);
         $('#qrText').html(qrData.replace(/\n/g, '<br>'));
+
+        // メールリンクを追加
+        const mailBody = encodeURIComponent(qrData);
+        const mailLink = `<a href="mailto:example@example.com?subject=IPSSスコア結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
+        $('#mailLink').html(mailLink);
     });
 
     $('#ipssSliderConfirmButton').click(function() {
@@ -185,6 +200,11 @@ $(document).ready(function() {
 
         generateQRCode(encodedData);
         $('#qrText').html(qrData.replace(/\n/g, '<br>'));
+
+        // メールリンクを追加
+        const mailBody = encodeURIComponent(qrData);
+        const mailLink = `<a href="mailto:example@example.com?subject=IPSSスコア結果（スライダー）&body=${mailBody}" class="mail-link">メールで送信</a>`;
+        $('#mailLink').html(mailLink);
     });
 
     function generateQRCode(data) {

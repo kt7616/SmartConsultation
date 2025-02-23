@@ -129,3 +129,18 @@ select, input[type="range"], textarea {
     margin-top: 10px;
     margin-bottom: 20px;
 }
+
+.mail-link {
+    display: inline-block;
+    background-color: #28a745;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+.mail-link:hover {
+    background-color: #218838;
+}
