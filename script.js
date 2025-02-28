@@ -298,119 +298,15 @@ $(document).ready(function() {
         
         // 最後のページで「確定」ボタンがクリックされた場合
         if (epicCurrentPage === epicTotalPages) {
-            // 全ての回答を収集
-            // 排尿の状態（問1～問7）
-            const urinaryAnswers = [];
-            for (let i = 1; i <= 5; i++) {
-                urinaryAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-            }
-            // 問6のサブ質問（a～f）
-            for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                const letter = String.fromCharCode(c);
-                urinaryAnswers.push($(`input[name="epic_q6${letter}"]:checked`).val());
-            }
-            // 問7
-            urinaryAnswers.push($(`input[name="epic_q7"]:checked`).val());
+            // EPICの結果を保存
+            const qrData = saveEpicResult();
             
-            // 排便とおなかの状態（問8～問16）
-            const bowelAnswers = [];
-            for (let i = 8; i <= 14; i++) {
-                bowelAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-            }
-            // 問15のサブ質問（a～f）
-            for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                const letter = String.fromCharCode(c);
-                bowelAnswers.push($(`input[name="epic_q15${letter}"]:checked`).val());
-            }
-            // 問16
-            bowelAnswers.push($(`input[name="epic_q16"]:checked`).val());
+            // 結果を保存
+            formResults['epic'] = qrData;
             
-            // 性機能（問17～問25）
-            const sexualAnswers = [];
-            // 問17のサブ質問（a～c）
-            for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-                const letter = String.fromCharCode(c);
-                sexualAnswers.push($(`input[name="epic_q17${letter}"]:checked`).val());
-            }
-            // 問18～問23
-            for (let i = 18; i <= 23; i++) {
-                sexualAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-            }
-            // 問24のサブ質問（a～c）
-            for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-                const letter = String.fromCharCode(c);
-                sexualAnswers.push($(`input[name="epic_q24${letter}"]:checked`).val());
-            }
-            // 問25
-            sexualAnswers.push($(`input[name="epic_q25"]:checked`).val());
+            // 結果を表示
+            showFinalResults();
             
-            // ホルモン機能（問26～問31）
-            const hormoneAnswers = [];
-            // 問26～問30
-            for (let i = 26; i <= 30; i++) {
-                hormoneAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-            }
-            // 問31のサブ質問（a～f）
-            for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                const letter = String.fromCharCode(c);
-                hormoneAnswers.push($(`input[name="epic_q31${letter}"]:checked`).val());
-            }
-            
-            // 全体的な満足度（問32）
-            const satisfactionAnswer = $(`input[name="epic_q32"]:checked`).val();
-
-        const today = new Date();
-        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-
-            // QRコード用データを作成
-            let qrData = `文書コード：991003\n入力日：${dateString}\n`;
-            qrData += `排尿の状態: ${urinaryAnswers.join('-')}\n`;
-            qrData += `排便とおなかの状態: ${bowelAnswers.join('-')}\n`;
-            qrData += `性機能: ${sexualAnswers.join('-')}\n`;
-            qrData += `ホルモン機能: ${hormoneAnswers.join('-')}\n`;
-            qrData += `全体的な満足度: ${satisfactionAnswer}\n`;
-            
-            // 複数フォームが選択されている場合
-            if (selectedForms.length > 1) {
-                // 結果を保存
-                formResults['epic'] = qrData;
-                
-                // 次のフォームに進む
-                goToNextForm();
-            } else {
-                // 単一フォームの場合は従来通りの処理
-                if (!$('#epic-result').length) {
-                    $('#epicForm').append(`
-                        <div id="epic-result" class="result-container">
-                            <h3>結果</h3>
-                            <div id="epic-qrcode"></div>
-                            <div id="epic-qrtext"></div>
-                            <div id="epic-maillink"></div>
-                        </div>
-                    `);
-                }
-                
-        const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
-
-                // QRコード表示
-                $('#epic-qrcode').html('').qrcode({
-                    width: 256,
-                    height: 256,
-                    text: encodedData
-                });
-                $('#epic-qrtext').html(qrData.replace(/\n/g, '<br>'));
-        
-        // メールリンクを追加
-        const mailBody = encodeURIComponent(qrData);
-                const mailLink = `<a href="mailto:example@example.com?subject=EPIC評価結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
-                $('#epic-maillink').html(mailLink);
-                
-                // 結果表示エリアを表示
-                $('#epic-result').show();
-                
-                // ページの一番下までスクロール
-                $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
-            }
             return;
         }
         
@@ -589,149 +485,78 @@ $(document).ready(function() {
 
     // フォームの結果を保存する関数
     function saveFormResult(formType) {
-        const today = new Date();
-        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-        
-        let qrData = '';
-        
         switch (formType) {
             case 'ipss':
-                // IPSSフォームの結果を保存
-                const ipssScores = [
-                    parseInt($('input[name="ipssQuestion1"]:checked').val()),
-                    parseInt($('input[name="ipssQuestion2"]:checked').val()),
-                    parseInt($('input[name="ipssQuestion3"]:checked').val()),
-                    parseInt($('input[name="ipssQuestion4"]:checked').val()),
-                    parseInt($('input[name="ipssQuestion5"]:checked').val()),
-                    parseInt($('input[name="ipssQuestion6"]:checked').val()),
-                    parseInt($('input[name="ipssQuestion7"]:checked').val())
-                ];
-                const qolScore = parseInt($('input[name="qolQuestion"]:checked').val());
-                const ipssTotal = ipssScores.reduce((a, b) => a + b, 0);
-                const ipssQolTotal = ipssTotal + qolScore;
-                const allScores = [...ipssScores, qolScore];
-                const ipssQolScoresText = `IPSS-QOL：${allScores.join('-')}`;
+                // IPSSスコアの計算
+                const ipssScores = [];
+                let ipssTotal = 0;
                 
-                qrData = `文書コード：991001\n入力日：${dateString}\n${ipssQolScoresText}\nIPSS-QOL合計点：${ipssQolTotal}点\n`;
+                for (let i = 1; i <= 7; i++) {
+                    const score = parseInt($(`input[name="ipssQuestion${i}"]:checked`).val(), 10);
+                    ipssScores.push(score);
+                    ipssTotal += score;
+                }
+                
+                // QOLスコア
+                const qolScore = parseInt($('input[name="qolQuestion"]:checked').val(), 10);
+                ipssScores.push(qolScore);
+                
+                // 現在の日付を取得
+                const today = new Date();
+                const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+                
+                // QRコード用データを作成
+                let ipssData = `【IPSS-QOLスコア】\n入力日：${dateString}\n`;
+                ipssData += `IPSS-QOL：${ipssScores.join('-')}\n`;
+                ipssData += `IPSS-QOL合計点：${ipssTotal}点\n`;
+                
+                // 結果を保存
+                formResults['ipss'] = ipssData;
                 break;
                 
             case 'ctcae':
-                // CTCAEフォームの結果を保存
-                const ctcaeItems = {
-                    'enteritis': $('#enteritis').val(),
-                    'rectalUlcer': $('#rectalUlcer').val(),
-                    'lowerGIHemorrhage': $('#lowerGIHemorrhage').val(),
-                    'analPain': $('#analPain').val(),
-                    'fecalIncontinence': $('#fecalIncontinence').val(),
-                    'ileus': $('#ileus').val(),
-                    'cystitisNoninfective': $('#cystitisNoninfective').val(),
-                    'urinaryRetention': $('#urinaryRetention').val(),
-                    'hematuria': $('#hematuria').val(),
-                    'urinaryTractPain': $('#urinaryTractPain').val(),
-                    'urinaryIncontinence': $('#urinaryIncontinence').val(),
-                    'fatigue': $('#fatigue').val(),
-                    'dermatitisRadiation': $('#dermatitisRadiation').val()
-                };
+                // 選択された症状を収集
+                const selectedSymptoms = [];
                 
-                const itemNames = {
-                    'enteritis': '腸炎',
-                    'rectalUlcer': '直腸潰瘍',
-                    'lowerGIHemorrhage': '下部消化管出血',
-                    'analPain': '肛門痛',
-                    'fecalIncontinence': '便失禁',
-                    'ileus': 'イレウス',
-                    'cystitisNoninfective': '非感染性膀胱炎',
-                    'urinaryRetention': '尿閉',
-                    'hematuria': '血尿',
-                    'urinaryTractPain': '尿路痛',
-                    'urinaryIncontinence': '尿失禁',
-                    'fatigue': '倦怠感',
-                    'dermatitisRadiation': '放射線皮膚炎'
-                };
-                
-                qrData = `文書コード：991002\n入力日：${dateString}\n`;
-                
-                for (const key in ctcaeItems) {
-                    if (ctcaeItems[key] !== "" && ctcaeItems[key] !== null && ctcaeItems[key] !== "0") {
-                        const grade = ctcaeItems[key];
-                        const itemText = `${itemNames[key]}：Grade ${grade}`;
-                        qrData += `${itemText}\n`;
+                $('.ctcae-select').each(function() {
+                    const symptomName = $(this).prev('label').text().replace(':', '');
+                    const gradeValue = $(this).val();
+                    
+                    if (gradeValue && gradeValue !== '0') {
+                        selectedSymptoms.push({
+                            name: symptomName,
+                            grade: `Grade ${gradeValue}`
+                        });
                     }
+                });
+                
+                // 現在の日付を取得
+                const ctcaeToday = new Date();
+                const ctcaeDateString = `${ctcaeToday.getFullYear()}/${ctcaeToday.getMonth() + 1}/${ctcaeToday.getDate()}`;
+                
+                // QRコード用データを作成
+                let ctcaeData = `【CTCAE（前立腺癌）】\n入力日：${ctcaeDateString}\n`;
+                
+                // 選択された症状がある場合のみ追加
+                if (selectedSymptoms.length > 0) {
+                    selectedSymptoms.forEach(symptom => {
+                        ctcaeData += `${symptom.name}：${symptom.grade}\n`;
+                    });
+                } else {
+                    ctcaeData += "該当する症状はありません\n";
                 }
+                
+                // 結果を保存
+                formResults['ctcae'] = ctcaeData;
                 break;
                 
             case 'epic':
-                // EPICフォームの結果を保存
-                // 排尿の状態（問1～問7）
-                const urinaryAnswers = [];
-                for (let i = 1; i <= 5; i++) {
-                    urinaryAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-                }
-                // 問6のサブ質問（a～f）
-                for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    urinaryAnswers.push($(`input[name="epic_q6${letter}"]:checked`).val());
-                }
-                // 問7
-                urinaryAnswers.push($(`input[name="epic_q7"]:checked`).val());
-                
-                // 排便とおなかの状態（問8～問16）
-                const bowelAnswers = [];
-                for (let i = 8; i <= 14; i++) {
-                    bowelAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-                }
-                // 問15のサブ質問（a～f）
-                for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    bowelAnswers.push($(`input[name="epic_q15${letter}"]:checked`).val());
-                }
-                // 問16
-                bowelAnswers.push($(`input[name="epic_q16"]:checked`).val());
-                
-                // 性機能（問17～問25）
-                const sexualAnswers = [];
-                // 問17のサブ質問（a～c）
-                for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    sexualAnswers.push($(`input[name="epic_q17${letter}"]:checked`).val());
-                }
-                // 問18～問23
-                for (let i = 18; i <= 23; i++) {
-                    sexualAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-                }
-                // 問24のサブ質問（a～c）
-                for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    sexualAnswers.push($(`input[name="epic_q24${letter}"]:checked`).val());
-                }
-                // 問25
-                sexualAnswers.push($(`input[name="epic_q25"]:checked`).val());
-                
-                // ホルモン機能（問26～問31）
-                const hormoneAnswers = [];
-                // 問26～問30
-                for (let i = 26; i <= 30; i++) {
-                    hormoneAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-                }
-                // 問31のサブ質問（a～f）
-                for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    hormoneAnswers.push($(`input[name="epic_q31${letter}"]:checked`).val());
-                }
-                
-                // 全体的な満足度（問32）
-                const satisfactionAnswer = $(`input[name="epic_q32"]:checked`).val();
-                
-                qrData = `文書コード：991003\n入力日：${dateString}\n`;
-                qrData += `排尿の状態:${urinaryAnswers.join('-')}\n`;
-                qrData += `排便とおなかの状態:${bowelAnswers.join('-')}\n`;
-                qrData += `性機能:${sexualAnswers.join('-')}\n`;
-                qrData += `ホルモン機能:${hormoneAnswers.join('-')}\n`;
-                qrData += `全体的な満足度:${satisfactionAnswer}\n`;
+                // EPICの結果を保存
+                formResults['epic'] = saveEpicResult();
                 break;
                 
             case 'eq5d':
-                // EQ-5Dフォームの結果を保存
+                // EQ-5Dの値を取得
                 const eq5dValues = {
                     mobility: $('input[name="eq5d_mobility"]:checked').val(),
                     selfcare: $('input[name="eq5d_selfcare"]:checked').val(),
@@ -741,6 +566,11 @@ $(document).ready(function() {
                     vas: $('#eq5d_vas').val()
                 };
                 
+                // 現在の日付を取得
+                const eq5dToday = new Date();
+                const eq5dDateString = `${eq5dToday.getFullYear()}/${eq5dToday.getMonth() + 1}/${eq5dToday.getDate()}`;
+                
+                // EQ-5Dスコアを配列に格納
                 const eq5dScores = [
                     eq5dValues.mobility,
                     eq5dValues.selfcare,
@@ -748,20 +578,19 @@ $(document).ready(function() {
                     eq5dValues.pain,
                     eq5dValues.anxiety
                 ];
-                const eq5dScoresText = `EQ-5D：${eq5dScores.join('-')}`;
                 
-                qrData = `文書コード：991004\n入力日：${dateString}\n`;
-                qrData += `${eq5dScoresText}\n`;
-                qrData += `健康状態(VAS)：${eq5dValues.vas}/100\n`;
+                // QRコード用データを作成
+                let eq5dData = `【EQ-5D】\n入力日：${eq5dDateString}\n`;
+                eq5dData += `EQ-5D：${eq5dScores.join('-')}\n`;
+                eq5dData += `健康状態(VAS)：${eq5dValues.vas}/100\n`;
+                
+                // 結果を保存
+                formResults['eq5d'] = eq5dData;
                 break;
         }
-        
-        // 結果を保存
-        formResults[formType] = qrData;
     }
 
-    // 各フォームの確定ボタンのイベントを修正
-    // IPSSフォームの確定ボタン処理
+    // IPSSフォームの確定ボタンのクリックイベント
     $('#ipssConfirmButton').click(function() {
         // 必須項目のチェック
         if (validateIpssForm()) {
@@ -788,40 +617,15 @@ $(document).ready(function() {
             qrData += `IPSS-QOL：${ipssScores.join('-')}\n`;
             qrData += `IPSS-QOL合計点：${ipssTotal}点\n`;
             
-            // 複数フォームが選択されている場合
-            if (selectedForms.length > 1) {
-                // 結果を保存
-                formResults['ipss'] = qrData;
-                
-                // 次のフォームに進む
-                goToNextForm();
-            } else {
-                // 単一フォームの場合は従来通りの処理
-                const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
-                
-                // QRコード表示
-                $('#ipss-qrcode').html('').qrcode({
-                    width: 256,
-                    height: 256,
-                    text: encodedData
-                });
-                $('#ipss-qrtext').html(qrData.replace(/\n/g, '<br>'));
-                
-                // メールリンクを追加
-                const mailBody = encodeURIComponent(qrData);
-                const mailLink = `<a href="mailto:example@example.com?subject=IPSS-QOL結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
-                $('#ipss-maillink').html(mailLink);
-                
-                // 結果表示エリアを表示
-                $('.ipss-result').show();
-                
-                // ページの一番下までスクロール
-                $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
-            }
+            // 結果を保存
+            formResults['ipss'] = qrData;
+            
+            // 結果を表示
+            showFinalResults();
         }
     });
 
-    // CTCAEフォームの確定ボタン処理
+    // CTCAEフォームの確定ボタンのクリックイベント
     $('#ctcaeConfirmButton').click(function() {
         // 必須項目のチェック
         if (validateCtcaeForm()) {
@@ -856,40 +660,15 @@ $(document).ready(function() {
                 qrData += "該当する症状はありません\n";
             }
             
-            // 複数フォームが選択されている場合
-            if (selectedForms.length > 1) {
-                // 結果を保存
-                formResults['ctcae'] = qrData;
-                
-                // 次のフォームに進む
-                goToNextForm();
-            } else {
-                // 単一フォームの場合は従来通りの処理
-                const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
-                
-                // QRコード表示
-                $('#ctcae-qrcode').html('').qrcode({
-                    width: 256,
-                    height: 256,
-                    text: encodedData
-                });
-                $('#ctcae-qrtext').html(qrData.replace(/\n/g, '<br>'));
-                
-                // メールリンクを追加
-                const mailBody = encodeURIComponent(qrData);
-                const mailLink = `<a href="mailto:example@example.com?subject=CTCAE（前立腺癌）結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
-                $('#ctcae-maillink').html(mailLink);
-                
-                // 結果表示エリアを表示
-                $('.ctcae-result').show();
-                
-                // ページの一番下までスクロール
-                $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
-            }
+            // 結果を保存
+            formResults['ctcae'] = qrData;
+            
+            // 結果を表示
+            showFinalResults();
         }
     });
 
-    // EPICフォームの結果保存
+    // EPICフォームの結果を保存する関数
     function saveEpicResult() {
         // 全ての回答を収集
         // 排尿の状態（問1～問7）
@@ -967,7 +746,7 @@ $(document).ready(function() {
         return qrData;
     }
 
-    // EQ-5Dフォームの確定ボタン処理
+    // EQ-5Dフォームの確定ボタンのクリックイベント
     $('#eq5dConfirmButton').click(function() {
         // 必須項目のチェック
         if (validateEq5dForm()) {
@@ -999,36 +778,11 @@ $(document).ready(function() {
             qrData += `EQ-5D：${eq5dScores.join('-')}\n`;
             qrData += `健康状態(VAS)：${eq5dValues.vas}/100\n`;
             
-            // 複数フォームが選択されている場合
-            if (selectedForms.length > 1) {
-                // 結果を保存
-                formResults['eq5d'] = qrData;
-                
-                // 次のフォームに進む
-                goToNextForm();
-            } else {
-                // 単一フォームの場合は従来通りの処理
-                const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
-                
-                // QRコード表示
-                $('#eq5d-qrcode').html('').qrcode({
-                    width: 256,
-                    height: 256,
-                    text: encodedData
-                });
-                $('#eq5d-qrtext').html(qrData.replace(/\n/g, '<br>'));
-                
-                // メールリンクを追加
-                const mailBody = encodeURIComponent(qrData);
-                const mailLink = `<a href="mailto:example@example.com?subject=EQ-5D結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
-                $('#eq5d-maillink').html(mailLink);
-                
-                // 結果表示エリアを表示
-                $('.eq5d-result').show();
-                
-                // ページの一番下までスクロール
-                $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
-            }
+            // 結果を保存
+            formResults['eq5d'] = qrData;
+            
+            // 結果を表示
+            showFinalResults();
         }
     });
 
