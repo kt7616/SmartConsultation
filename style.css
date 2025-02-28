@@ -53,6 +53,7 @@ textarea {
     resize: vertical;
 }
 
+/* ボタンのデザイン統一 */
 button {
     background-color: #007acc;
     color: white;
@@ -63,10 +64,17 @@ button {
     width: 100%;
     font-size: 20px;
     margin-top: 20px;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
     background-color: #005a99;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 #result {
@@ -130,6 +138,80 @@ select, input[type="range"], textarea {
     margin-bottom: 20px;
 }
 
+/* ナビゲーションボタンのスタイル修正 */
+.nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+/* 「戻る」ボタンが非表示の場合、「次へ」ボタンを右寄せにする */
+.nav-buttons.first-form {
+    justify-content: flex-end;
+}
+
+.nav-btn {
+    padding: 12px 24px;
+    background-color: #007acc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    margin: 0 10px;
+    width: auto;
+}
+
+.nav-btn:hover {
+    background-color: #005a99;
+}
+
+.nav-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* EPICナビゲーションボタンのスタイル */
+.epic-nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.epic-nav-btn {
+    padding: 12px 24px;
+    background-color: #007acc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    margin: 0 10px;
+    width: auto;
+}
+
+.epic-nav-btn:hover {
+    background-color: #005a99;
+}
+
+.epic-nav-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 確定ボタンのスタイル */
+#ipssConfirmButton, #ctcaeConfirmButton, #eq5dConfirmButton {
+    background-color: #007acc;
+    width: 100%;
+}
+
+/* メール送信ボタンのスタイル */
 .mail-link {
     display: inline-block;
     background-color: #28a745;
@@ -139,8 +221,424 @@ select, input[type="range"], textarea {
     text-decoration: none;
     margin-top: 20px;
     font-size: 18px;
+    transition: background-color 0.3s ease;
 }
 
 .mail-link:hover {
     background-color: #218838;
+}
+
+/* 開始ボタンのスタイル */
+#startButton {
+    background-color: #007acc;
+    width: 100%;
+    margin-top: 30px;
+}
+
+/* 進行状況バーのスタイル */
+.progress-bar {
+    height: 100%;
+    background-color: #007acc;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.ctcae-select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: #f0f0f0;
+}
+
+#ctcaeForm h2 {
+    font-size: 24px;
+    color: #333;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+#ctcaeForm p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.ipss-question {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.ipss-question p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 10px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    margin-right: 10px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}
+
+/* EPICフォーム用のスタイル */
+.epic-copyright {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.epic-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.epic-page-indicator {
+    font-size: 16px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.epic-page {
+    margin-bottom: 30px;
+}
+
+.epic-instruction {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.epic-question {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.epic-question p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: left;
+    font-weight: 500;
+}
+
+h3 {
+    font-size: 24px;
+    color: #333;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.container {
+    width: 600px;
+    max-width: 90%;
+}
+
+/* 追加のスタイル */
+.epic-sub-question {
+    font-size: 16px;
+    color: #333;
+    margin: 10px 0;
+    text-align: left;
+    font-weight: normal;
+    margin-left: 15px;
+}
+
+.epic-sub-instruction {
+    font-size: 14px;
+    color: #555;
+    margin: 5px 0 15px 0;
+    text-align: left;
+    font-style: italic;
+}
+
+.epic-completion-message {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.epic-completion-message p {
+    font-size: 18px;
+    color: #333;
+    margin: 0;
+}
+
+/* EQ-5D用のスタイル調整 */
+#eq5dForm {
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.eq5d-copyright {
+    font-size: 12px;
+    color: #666;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+#eq5dForm h2 {
+    margin-bottom: 5px;
+}
+
+.eq5d-instruction {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.eq5d-question {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.eq5d-question p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: left;
+    font-weight: 500;
+}
+
+.eq5d-note {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+    text-align: left;
+    font-style: italic;
+}
+
+.eq5d-vas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.eq5d-vas {
+    width: 100%;
+    height: 40px;
+    margin: 20px 0;
+}
+
+.eq5d-vas-value {
+    font-size: 32px !important;
+    color: #333;
+    font-weight: bold;
+}
+
+/* EQ-5Dの結果表示用スタイル */
+.eq5d-result {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.eq5d-result h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#eq5d-qrcode {
+    margin: 20px auto;
+    width: 256px;
+    height: 256px;
+}
+
+#eq5d-qrtext {
+    text-align: left;
+    font-size: 14px;
+    color: #555;
+    margin-top: 10px;
+}
+
+/* スライダーバーの数値のスパン要素にも適用 */
+#eq5d_vas_value {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+/* 結果表示の統一スタイル */
+.result-container {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.result-container h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.result-content {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.qrcode-container {
+    margin: 20px auto;
+    width: 256px;
+    height: 256px;
+}
+
+.qrtext-container {
+    text-align: left;
+    font-size: 14px;
+    color: #555;
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+.mail-container {
+    margin-top: 20px;
+}
+
+/* チェックボックス選択のスタイル */
+.item-selection {
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 15px;
+    width: 20px;
+    height: 20px;
+}
+
+/* 進行状況表示のスタイル */
+.progress-indicator {
+    margin: 20px 0;
+}
+
+.progress-text {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+/* 最終結果表示のスタイル */
+#final-results {
+    margin-top: 40px;
+}
+
+/* 読み込みツールボタンのスタイル */
+.import-tool-btn {
+    background-color: #28a745;
+    margin-top: 15px;
+}
+
+.import-tool-btn:hover {
+    background-color: #218838;
+}
+
+/* 読み込みツールフォームのスタイル */
+.import-instruction {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.import-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    resize: vertical;
+}
+
+.csv-instruction {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.csv-output {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    resize: vertical;
+}
+
+.copy-btn {
+    background-color: #007acc;
+    margin-right: 10px;
+    width: calc(50% - 5px);
+}
+
+.back-btn {
+    background-color: #6c757d;
+    width: calc(50% - 5px);
 }
