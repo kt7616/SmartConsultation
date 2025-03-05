@@ -31,6 +31,159 @@ $(document).ready(function() {
         }
     });
 
+    // 読み込みツール（医療者用）ボタンのクリックイベント
+    $('#importToolButton').click(function() {
+        // パスワード入力ダイアログを表示
+        const password = prompt('パスワードを入力してください:');
+        
+        // パスワードが正しい場合のみ読み込みツールを表示
+        if (password === '7312') {
+            // 項目選択部分を非表示にする
+            $('.item-selection').hide();
+            
+            // 読み込みツールフォームを表示
+            $('#importToolForm').show();
+            
+            // タイトルを更新
+            $('h1').text('読み込みツール（医療者用）');
+            
+            // ページの一番上にスクロール
+            window.scrollTo(0, 0);
+        } else {
+            alert('パスワードが正しくありません。');
+        }
+    });
+
+    // CTCAE（医療者用）ボタンのクリックイベント
+    $('#ctcaeToolButton').click(function() {
+        // パスワード入力ダイアログを表示
+        const password = prompt('パスワードを入力してください:');
+        
+        // パスワードが正しい場合のみCTCAEフォームを表示
+        if (password === '7312') {
+            // 項目選択部分を非表示にする
+            $('.item-selection').hide();
+            
+            // CTCAEフォームを表示
+            $('#ctcaeToolForm').show();
+            
+            // タイトルを更新
+            $('h1').text('CTCAE（医療者用）');
+            
+            // ページの一番上にスクロール
+            window.scrollTo(0, 0);
+        } else {
+            alert('パスワードが正しくありません。');
+        }
+    });
+
+    // CTCAE（医療者用）の確定ボタンのクリックイベント
+    $('#ctcaeOnlyConfirmButton').click(function() {
+        // 必須項目のチェック
+        if (validateCtcaeOnlyForm()) {
+            // 選択された症状を収集
+            const selectedSymptoms = [];
+            
+            $('#ctcaeOnlyForm .ctcae-select').each(function() {
+                const symptomName = $(this).prev('label').text().replace(':', '');
+                const gradeValue = $(this).val();
+                
+                if (gradeValue && gradeValue !== '0') {
+                    selectedSymptoms.push({
+                        name: symptomName,
+                        grade: `Grade ${gradeValue}`
+                    });
+                }
+            });
+            
+            // 現在の日付を取得
+            const today = new Date();
+            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+            
+            // QRコード用データを作成
+            let qrData = `【CTCAE（前立腺癌）】\n入力日：${dateString}\n`;
+            
+            // 選択された症状がある場合のみ追加
+            if (selectedSymptoms.length > 0) {
+                selectedSymptoms.forEach(symptom => {
+                    qrData += `${symptom.name}：${symptom.grade}\n`;
+                });
+            } else {
+                qrData += "該当する症状はありません\n";
+            }
+            
+            // QRコード表示
+            const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
+            $('#ctcae-qrcode').html('').qrcode({
+                width: 256,
+                height: 256,
+                text: encodedData
+            });
+            
+            // テキスト表示
+            $('#ctcae-qrtext').html(qrData.replace(/\n/g, '<br>'));
+            
+            // メールリンクを追加
+            const mailBody = encodeURIComponent(qrData);
+            const mailLink = `<a href="mailto:example@example.com?subject=CTCAE評価結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
+            $('#ctcae-maillink').html(mailLink);
+            
+            // 結果を表示
+            $('#ctcaeResult').show();
+            
+            // フォームを非表示
+            $('#ctcaeOnlyForm').hide();
+            $('#ctcaeOnlyConfirmButton').hide();
+        }
+    });
+
+    // CTCAE（医療者用）の戻るボタンのクリックイベント
+    $('#ctcaeBackButton').click(function() {
+        // CTCAEフォームを非表示
+        $('#ctcaeToolForm').hide();
+        $('#ctcaeResult').hide();
+        
+        // フォームをリセット
+        $('#ctcaeOnlyForm')[0].reset();
+        $('#ctcaeOnlyForm').show();
+        $('#ctcaeOnlyConfirmButton').show();
+        
+        // 項目選択部分を表示
+        $('.item-selection').show();
+        
+        // タイトルを更新
+        $('h1').text('スマート問診アプリ');
+        
+        // ページの一番上にスクロール
+        window.scrollTo(0, 0);
+    });
+
+    // CTCAE（医療者用）フォームのバリデーション
+    function validateCtcaeOnlyForm() {
+        const ctcaeItems = {};
+        
+        $('#ctcaeOnlyForm .ctcae-select').each(function() {
+            const id = $(this).attr('id');
+            ctcaeItems[id] = $(this).val();
+        });
+        
+        // 選択された項目があるか確認
+        let hasSelection = false;
+        for (const key in ctcaeItems) {
+            if (ctcaeItems[key] !== "" && ctcaeItems[key] !== null) {
+                hasSelection = true;
+                break;
+            }
+        }
+        
+        if (!hasSelection) {
+            alert('少なくとも1つの項目を評価してください。');
+            return false;
+        }
+        
+        return true;
+    }
+
     $('#selection').change(function() {
         $('.form-section').hide();
         $('#bmiValue').html('');
@@ -100,8 +253,15 @@ $(document).ready(function() {
     $('#startButton').click(function() {
         // 選択されたフォームを取得
         selectedForms = [];
-        $('input[name="selected_forms"]:checked').each(function() {
-            selectedForms.push($(this).val());
+        
+        // 指定した順序でフォームを追加（IPSS-QOL、EQ-5D、EPICの順）
+        const formOrder = ['ipss', 'eq5d', 'epic'];
+        
+        // チェックされたフォームを順序通りに追加
+        formOrder.forEach(function(formType) {
+            if ($(`input[name="selected_forms"][value="${formType}"]`).is(':checked')) {
+                selectedForms.push(formType);
+            }
         });
 
         if (selectedForms.length === 0) {
@@ -824,23 +984,29 @@ $(document).ready(function() {
         
         let combinedQrData = `入力日：${dateString}\n`;
         
-        // 各フォームの結果を追加
-        for (const form in formResults) {
-            // フォームデータから入力日を除去
-            const formLines = formResults[form].split('\n');
-            
-            // 最初の行がタイトル行でない場合、タイトルを追加
-            if (!formLines[0].startsWith('【')) {
-                combinedQrData += `【${getFormTitle(form)}】\n`;
-            } else {
-                // タイトル行をそのまま追加
-                combinedQrData += `${formLines[0]}\n`;
-            }
-            
-            // 入力日の行をスキップして残りの行を追加
-            for (let i = 1; i < formLines.length; i++) {
-                if (!formLines[i].startsWith('入力日：')) {
-                    combinedQrData += `${formLines[i]}\n`;
+        // 各フォームの結果を指定した順序で追加（IPSS-QOL、EQ-5D、EPICの順）
+        const formOrder = ['ipss', 'eq5d', 'epic'];
+        
+        // 指定した順序でフォームの結果を追加
+        for (const formType of formOrder) {
+            // フォームの結果が存在する場合のみ追加
+            if (formResults[formType]) {
+                // フォームデータから入力日を除去
+                const formLines = formResults[formType].split('\n');
+                
+                // 最初の行がタイトル行でない場合、タイトルを追加
+                if (!formLines[0].startsWith('【')) {
+                    combinedQrData += `【${getFormTitle(formType)}】\n`;
+                } else {
+                    // タイトル行をそのまま追加
+                    combinedQrData += `${formLines[0]}\n`;
+                }
+                
+                // 入力日の行をスキップして残りの行を追加
+                for (let i = 1; i < formLines.length; i++) {
+                    if (!formLines[i].startsWith('入力日：')) {
+                        combinedQrData += `${formLines[i]}\n`;
+                    }
                 }
             }
         }
@@ -934,21 +1100,6 @@ $(document).ready(function() {
         // ページの一番上にスクロール
         window.scrollTo(0, 0);
     }
-
-    // 読み込みツールボタンのクリックイベント
-    $('#importToolButton').click(function() {
-        // 項目選択部分を非表示にする
-        $('.item-selection').hide();
-        
-        // 読み込みツールフォームを表示
-        $('#importToolForm').show();
-        
-        // タイトルを更新
-        $('h1').text('読み込みツール');
-        
-        // ページの一番上にスクロール
-        window.scrollTo(0, 0);
-    });
 
     // 変換ボタンのクリックイベント
     $('#convertButton').click(function() {
@@ -1095,16 +1246,14 @@ $(document).ready(function() {
             csvRows.push([]);  // 空行を追加
         }
         
-        // CTCAEのCSV生成
-        if (formData['CTCAE（前立腺癌）']) {
-            const ctcaeItems = formData['CTCAE（前立腺癌）'].items;
-            if (ctcaeItems.length > 0) {
-                csvRows.push(['CTCAE（前立腺癌）']);
-                csvRows.push(['入力日', ...ctcaeItems.map(item => item.name)]);
-                csvRows.push(['', ...ctcaeItems.map(() => 'Grade')]);
-                csvRows.push([inputDate, ...ctcaeItems.map(item => item.grade)]);
-                csvRows.push([]);  // 空行を追加
-            }
+        // EQ-5DのCSV生成
+        if (formData['EQ-5D']) {
+            const eq5dHeaders = ['入力日', '移動の程度', '身の回りの管理', 'ふだんの活動', '痛み/不快感', '不安/ふさぎ込み', '健康状態(VAS)'];
+            
+            csvRows.push(['EQ-5D']);
+            csvRows.push([...eq5dHeaders]);
+            csvRows.push([inputDate, ...formData['EQ-5D'].scores]);
+            csvRows.push([]);  // 空行を追加
         }
         
         // EPICのCSV生成
@@ -1209,13 +1358,15 @@ $(document).ready(function() {
             csvRows.push([]);  // 空行を追加
         }
         
-        // EQ-5DのCSV生成
-        if (formData['EQ-5D']) {
-            const eq5dHeaders = ['入力日', '移動の程度', '身の回りの管理', 'ふだんの活動', '痛み/不快感', '不安/ふさぎ込み', '健康状態(VAS)'];
-            
-            csvRows.push(['EQ-5D']);
-            csvRows.push([...eq5dHeaders]);
-            csvRows.push([inputDate, ...formData['EQ-5D'].scores]);
+        // CTCAEのCSV生成
+        if (formData['CTCAE（前立腺癌）']) {
+            const ctcaeItems = formData['CTCAE（前立腺癌）'].items;
+            if (ctcaeItems.length > 0) {
+                csvRows.push(['CTCAE（前立腺癌）']);
+                csvRows.push(['入力日', ...ctcaeItems.map(item => item.name)]);
+                csvRows.push(['', ...ctcaeItems.map(() => 'Grade')]);
+                csvRows.push([inputDate, ...ctcaeItems.map(item => item.grade)]);
+            }
         }
         
         // 配列をタブ区切りのCSV文字列に変換

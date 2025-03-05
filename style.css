@@ -233,6 +233,11 @@ select, input[type="range"], textarea {
     background-color: #007acc;
     width: 100%;
     margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+#startButton:hover {
+    background-color: #0056b3;
 }
 
 /* 進行状況バーのスタイル */
@@ -587,12 +592,14 @@ h3 {
 
 /* 読み込みツールボタンのスタイル */
 .import-tool-btn {
-    background-color: #28a745;
-    margin-top: 15px;
+    background-color: #777777;
+    color: white;
+    margin-top: 10px;
+    width: 100%;
 }
 
 .import-tool-btn:hover {
-    background-color: #218838;
+    background-color: #555555;
 }
 
 /* 読み込みツールフォームのスタイル */
@@ -641,4 +648,82 @@ h3 {
 .back-btn {
     background-color: #6c757d;
     width: calc(50% - 5px);
+}
+
+.ctcae-tool-btn {
+    background-color: #777777;
+    color: white;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.ctcae-tool-btn:hover {
+    background-color: #555555;
+}
+
+.ctcae-instruction {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+#ctcaeOnlyForm {
+    text-align: left;
+}
+
+/* CTCAEボタンのコンテナ */
+.ctcae-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* CTCAEボタンのスタイルを統一 */
+#ctcaeOnlyConfirmButton, #ctcaeBackButton {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    width: 48%;
+}
+
+#ctcaeOnlyConfirmButton {
+    background-color: #007bff;
+    color: white;
+}
+
+#ctcaeOnlyConfirmButton:hover {
+    background-color: #0056b3;
+}
+
+#ctcaeBackButton {
+    background-color: #6c757d;
+    color: white;
+}
+
+#ctcaeBackButton:hover {
+    background-color: #5a6268;
+}
+
+#ctcae-qrcode {
+    margin: 20px auto;
+    text-align: center;
+}
+
+#ctcae-qrtext {
+    margin: 20px 0;
+    text-align: left;
+    white-space: pre-wrap;
+    font-family: monospace;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+#ctcae-maillink {
+    margin: 20px 0;
 }

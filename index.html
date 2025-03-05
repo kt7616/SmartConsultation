@@ -16,13 +16,13 @@
         <div class="item-selection">
             <h2>回答する項目を選択してください:</h2>
             <div class="checkbox-group">
-                <label class="checkbox-label"><input type="checkbox" name="selected_forms" value="ipss">IPSS-QOLスコア</label>
-                <label class="checkbox-label"><input type="checkbox" name="selected_forms" value="ctcae">CTCAE（前立腺癌）</label>
+                <label class="checkbox-label"><input type="checkbox" name="selected_forms" value="ipss" checked>IPSS-QOLスコア</label>
+                <label class="checkbox-label"><input type="checkbox" name="selected_forms" value="eq5d" checked>EQ-5D</label>
                 <label class="checkbox-label"><input type="checkbox" name="selected_forms" value="epic">EPIC（前立腺癌QOL）</label>
-                <label class="checkbox-label"><input type="checkbox" name="selected_forms" value="eq5d">EQ-5D</label>
             </div>
-            <button type="button" id="startButton">開始</button>
-            <button type="button" id="importToolButton" class="import-tool-btn">読み込みツール</button>
+            <button type="button" id="startButton">回答開始</button>
+            <button type="button" id="importToolButton" class="import-tool-btn">読み込みツール（医療者用）</button>
+            <button type="button" id="ctcaeToolButton" class="ctcae-tool-btn">CTCAE（医療者用）</button>
         </div>
 
         <!-- 進行状況表示部分を追加 -->
@@ -1074,6 +1074,159 @@
                 <textarea id="csvOutput" class="csv-output" rows="10" readonly></textarea>
                 <button type="button" id="copyButton" class="copy-btn">コピー</button>
                 <button type="button" id="backButton" class="back-btn">戻る</button>
+            </div>
+        </div>
+
+        <!-- CTCAE（医療者用）フォーム -->
+        <div id="ctcaeToolForm" class="form-section" style="display: none;">
+            <h2>CTCAE（医療者用）</h2>
+            <p class="ctcae-instruction">患者さんの症状を評価してください。</p>
+            
+            <form id="ctcaeOnlyForm">
+                <label for="enteritis">腸炎:</label>
+                <select id="enteritis" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 症状がない; 臨床所見または検査所見のみ; 治療を要さない</option>
+                    <option value="2">Grade 2: 腹痛; 粘液または血液が便に混入</option>
+                    <option value="3">Grade 3: 高度の腹痛; 腸管運動の変化; 内科的治療を要する; 腹膜刺激症状</option>
+                    <option value="4">Grade 4: 生命を脅かす; 緊急処置を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="rectalUlcer">直腸潰瘍:</label>
+                <select id="rectalUlcer" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 症状がない; 臨床所見または検査所見のみ; 治療を要さない</option>
+                    <option value="2">Grade 2: 症状がある; 消化管機能の変化</option>
+                    <option value="3">Grade 3: 消化管機能の高度の変化; TPNを要する; 待機的侵襲的治療を要する</option>
+                    <option value="4">Grade 4: 生命を脅かす; 緊急の外科的処置を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="lowerGIHemorrhage">下部消化管出血:</label>
+                <select id="lowerGIHemorrhage" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 軽度の症状; 治療を要さない</option>
+                    <option value="2">Grade 2: 中等度の症状; 治療を要する</option>
+                    <option value="3">Grade 3: 輸血を要する; 侵襲的治療を要する; 入院を要する</option>
+                    <option value="4">Grade 4: 生命を脅かす; 緊急処置を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="analPain">肛門痛:</label>
+                <select id="analPain" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 軽度の疼痛</option>
+                    <option value="2">Grade 2: 中等度の疼痛; 身の回り以外の日常生活動作の制限</option>
+                    <option value="3">Grade 3: 高度の疼痛; 身の回りの日常生活動作の制限</option>
+                </select>
+
+                <label for="fecalIncontinence">便失禁:</label>
+                <select id="fecalIncontinence" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 時に下着の汚染がある</option>
+                    <option value="2">Grade 2: 頻回の下着の汚染がある</option>
+                    <option value="3">Grade 3: 身の回りの日常生活動作の制限</option>
+                </select>
+
+                <label for="ileus">イレウス:</label>
+                <select id="ileus" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 症状がない; 臨床所見または検査所見のみ; 治療を要さない</option>
+                    <option value="2">Grade 2: 症状がある; 消化管機能の変化; 経口摂取の変更</option>
+                    <option value="3">Grade 3: 高度の症状; 経管栄養/TPN/入院を要する; 非待機的外科的処置を要する</option>
+                    <option value="4">Grade 4: 生命を脅かす; 緊急の外科的処置を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="cystitisNoninfective">非感染性膀胱炎:</label>
+                <select id="cystitisNoninfective" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 顕微鏡的血尿; 排尿回数/尿意切迫/排尿困難/夜間排尿の回数の軽微な増加; 失禁の新規発症</option>
+                    <option value="2">Grade 2: 中等度の血尿; 排尿回数/尿意切迫/排尿困難/夜間排尿または失禁の回数の中等度の増加; 尿路カテーテル留置/膀胱洗浄を要する; 身の回り以外の日常生活動作の制限</option>
+                    <option value="3">Grade 3: 肉眼的血尿; 輸血/薬剤の静脈内投与/入院を要する; 待機的侵襲的治療を要する</option>
+                    <option value="4">Grade 4: 生命を脅かす; 緊急の侵襲的治療を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="urinaryRetention">尿閉:</label>
+                <select id="urinaryRetention" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 尿閉があるが, 尿路カテーテル/薬物治療を要さない</option>
+                    <option value="2">Grade 2: 尿閉があり, 尿路カテーテル/薬物治療を要する</option>
+                    <option value="3">Grade 3: 待機的外科的処置を要する</option>
+                    <option value="4">Grade 4: 生命を脅かす; 臓器不全; 緊急の外科的処置を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="hematuria">血尿:</label>
+                <select id="hematuria" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 症状がない; 臨床所見または検査所見のみ; 治療を要さない</option>
+                    <option value="2">Grade 2: 症状がある; 尿路カテーテル留置/膀胱洗浄を要する; 身の回り以外の日常生活動作の制限</option>
+                    <option value="3">Grade 3: 肉眼的血尿; 輸血/薬剤の静脈内投与/入院を要する; 待機的侵襲的治療を要する; 身の回りの日常生活動作の制限</option>
+                    <option value="4">Grade 4: 生命を脅かす; 緊急の侵襲的治療を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+
+                <label for="urinaryTractPain">尿路痛:</label>
+                <select id="urinaryTractPain" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 軽度の疼痛</option>
+                    <option value="2">Grade 2: 中等度の疼痛; 身の回り以外の日常生活動作の制限</option>
+                    <option value="3">Grade 3: 高度の疼痛; 身の回りの日常生活動作の制限</option>
+                </select>
+
+                <label for="urinaryIncontinence">尿失禁:</label>
+                <select id="urinaryIncontinence" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 時に（例: 咳, くしゃみなどで）失禁がある; パッドを要さない</option>
+                    <option value="2">Grade 2: 自然に失禁する; パッドを要する; 身の回り以外の日常生活動作の制限</option>
+                    <option value="3">Grade 3: 身の回りの日常生活動作の制限; 外科的処置を要する</option>
+                </select>
+
+                <label for="fatigue">倦怠感:</label>
+                <select id="fatigue" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: 休息により軽快する倦怠感</option>
+                    <option value="2">Grade 2: 休息によって軽快しない倦怠感; 身の回り以外の日常生活動作の制限</option>
+                    <option value="3">Grade 3: 休息によって軽快しない倦怠感; 身の回りの日常生活動作の制限</option>
+                </select>
+
+                <label for="dermatitisRadiation">放射線皮膚炎:</label>
+                <select id="dermatitisRadiation" class="ctcae-select">
+                    <option value="" selected>選択してください</option>
+                    <option value="0">症状なし</option>
+                    <option value="1">Grade 1: わずかな紅斑や乾性落屑</option>
+                    <option value="2">Grade 2: 中等度から高度の紅斑; まだらな湿性落屑. ただしほとんどが皺や襞に限局している; 中等度の浮腫</option>
+                    <option value="3">Grade 3: 皺や襞以外の部位の湿性落屑; 軽度の外傷や擦過により出血する</option>
+                    <option value="4">Grade 4: 生命を脅かす; 皮膚全層の壊死や潰瘍; 病変部より自然に出血する; 皮膚移植を要する</option>
+                    <option value="5">Grade 5: 死亡</option>
+                </select>
+            </form>
+            
+            <div class="ctcae-buttons-container">
+                <button type="button" id="ctcaeOnlyConfirmButton">確定</button>
+                <button type="button" id="ctcaeBackButton" class="back-btn">戻る</button>
+            </div>
+            
+            <div id="ctcaeResult" class="result-container" style="display: none;">
+                <h3>結果</h3>
+                <div id="ctcae-qrcode"></div>
+                <div id="ctcae-qrtext"></div>
+                <div id="ctcae-maillink"></div>
             </div>
         </div>
     </div>
