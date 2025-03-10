@@ -1,1375 +1,680 @@
 $(document).ready(function() {
     window.scrollTo(0, 0);
 
+    // メール送信ボタンのクリックイベントを削除
+
     // フォームに入力があったかどうかのフラグ
     let hasUserInput = false;
     
-    // フォームの入力を監視
-    $('input, select, textarea').on('change', function() {
-        hasUserInput = true;
+    // IPSSとEQ-5Dの質問と選択肢を定義
+    const questions = {
+        ipss: [
+            {
+                id: 1,
+                text: "この1ヶ月間で、尿が出終わった後に尿がまだ残っている感じがありましたか？",
+                options: ["全くない", "5回に1回以下", "2回に1回くらい", "2回に1回より多い", "ほとんどいつも"]
+            },
+            {
+                id: 2,
+                text: "この1ヶ月間で、尿をし始めてから2時間以内にもう一度しなければならないことがありましたか？",
+                options: ["全くない", "5回に1回以下", "2回に1回くらい", "2回に1回より多い", "ほとんどいつも"]
+            },
+            {
+                id: 3,
+                text: "この1ヶ月間で、尿をしている途中で尿が途切れることがありましたか？",
+                options: ["全くない", "5回に1回以下", "2回に1回くらい", "2回に1回より多い", "ほとんどいつも"]
+            },
+            {
+                id: 4,
+                text: "この1ヶ月間で、尿を我慢するのが難しいことがありましたか？",
+                options: ["全くない", "5回に1回以下", "2回に1回くらい", "2回に1回より多い", "ほとんどいつも"]
+            },
+            {
+                id: 5,
+                text: "この1ヶ月間で、尿の勢いが弱いことがありましたか？",
+                options: ["全くない", "5回に1回以下", "2回に1回くらい", "2回に1回より多い", "ほとんどいつも"]
+            },
+            {
+                id: 6,
+                text: "この1ヶ月間で、尿をし始めるためにいきむ必要がありましたか？",
+                options: ["全くない", "5回に1回以下", "2回に1回くらい", "2回に1回より多い", "ほとんどいつも"]
+            },
+            {
+                id: 7,
+                text: "この1ヶ月間で、夜寝てから朝起きるまでに何回尿をするために起きましたか？",
+                options: ["0回", "1回", "2回", "3回", "4回", "5回以上"]
+            },
+            {
+                id: 8,
+                text: "現在の排尿状態が今後ずっと続くとしたら、あなたはどう感じますか？",
+                options: ["とても満足", "満足", "やや満足", "どちらでもない", "やや不満", "不満", "とても不満"]
+            }
+        ],
+        eq5d: [
+            {
+                id: 101,
+                text: "移動の程度について、あなたの状態を最もよく表している記述を選んでください。",
+                options: ["私は歩き回るのに問題はない", "私は歩き回るのにいくらか問題がある", "私は歩き回るのに中程度の問題がある", "私は歩き回るのに重度の問題がある", "私は歩き回ることができない"]
+            },
+            {
+                id: 102,
+                text: "身の回りの管理について、あなたの状態を最もよく表している記述を選んでください。",
+                options: ["私は自分で身の回りの管理をするのに問題はない", "私は自分で身の回りの管理をするのにいくらか問題がある", "私は自分で身の回りの管理をするのに中程度の問題がある", "私は自分で身の回りの管理をするのに重度の問題がある", "私は自分で身の回りの管理をすることができない"]
+            },
+            {
+                id: 103,
+                text: "普段の活動（仕事、勉強、家事、家族、余暇活動）について、あなたの状態を最もよく表している記述を選んでください。",
+                options: ["私は普段の活動を行うのに問題はない", "私は普段の活動を行うのにいくらか問題がある", "私は普段の活動を行うのに中程度の問題がある", "私は普段の活動を行うのに重度の問題がある", "私は普段の活動を行うことができない"]
+            },
+            {
+                id: 104,
+                text: "痛み／不快感について、あなたの状態を最もよく表している記述を選んでください。",
+                options: ["私は痛みや不快感はない", "私はいくらかの痛みや不快感がある", "私は中程度の痛みや不快感がある", "私は重度の痛みや不快感がある", "私は極度の痛みや不快感がある"]
+            },
+            {
+                id: 105,
+                text: "不安／ふさぎ込みについて、あなたの状態を最もよく表している記述を選んでください。",
+                options: ["私は不安でもふさぎ込んでもいない", "私はいくらか不安またはふさぎ込んでいる", "私は中程度に不安またはふさぎ込んでいる", "私は重度に不安またはふさぎ込んでいる", "私は極度に不安またはふさぎ込んでいる"]
+            },
+            {
+                id: 106,
+                text: "あなたの今日の健康状態がどのくらい良いか悪いかを0～100で教えてください。\n（100はあなたの想像できる最も良い健康状態を、0はあなたの想像できる最も悪い健康状態を表しています。）",
+                type: "vas",
+                min: 0,
+                max: 100
+            }
+        ]
+    };
+    
+    let currentFormType = "";
+    let currentQuestionIndex = 0;
+    let answers = {
+        ipss: new Array(questions.ipss.length).fill(null),
+        eq5d: new Array(questions.eq5d.length).fill(null)
+    };
+    
+    // 開始ボタンのイベントリスナー
+    $('#startButton').on('click', function() {
+        // 開始画面を非表示
+        $('#startScreen').hide();
+        // チャットインターフェースを表示
+        $('#chatInterface').show();
+        
+        // 固定で回答する項目を設定（IPSS-QOLとEQ-5D）
+        const selectedForms = ['ipss', 'eq5d'];
+        
+        if (selectedForms.length > 0) {
+            currentFormType = selectedForms[0];
+            
+            // 複数のメッセージを遅延を入れて表示
+            addBotMessages([
+                "それでは質問を開始します。",
+                "前半では排尿関連の症状についてお聞きします。"
+            ]);
+            
+            // 最初の質問を表示（最後のメッセージから十分な時間をあけて）
+            setTimeout(() => {
+                showQuestion(currentQuestionIndex);
+            }, 1200);
+        }
     });
     
-    // メールリンクをクリックした時にフラグをリセット
-    $(document).on('click', '.mail-link', function() {
-        // メール送信前に一時的にフラグをfalseに設定
-        const tempHasUserInput = hasUserInput;
-        hasUserInput = false;
+    // スクロール処理を行う関数
+    function scrollToLatestContent(target = null, offset = 100) {
+        const messagesDiv = document.getElementById('chatMessages');
         
-        // 少し遅延させてフラグを元に戻す（メールクライアントが開いた後）
-        setTimeout(function() {
-            hasUserInput = tempHasUserInput;
+        // チャットエリア内のスクロール
+        const scrollHeight = messagesDiv.scrollHeight;
+        $(messagesDiv).animate({ scrollTop: scrollHeight }, 400);
+        
+        // ターゲット要素が指定されている場合はその要素までスクロール
+        if (target) {
+            const targetPosition = $(target).offset().top;
+            const viewportHeight = window.innerHeight;
+            const currentScroll = window.pageYOffset;
+            
+            // ターゲットが表示領域外にある場合のみスクロール
+            if (targetPosition > currentScroll + viewportHeight - offset || 
+                targetPosition < currentScroll + offset) {
+                $('html, body').animate({
+                    scrollTop: targetPosition - (viewportHeight / 3)
+                }, 400);
+            }
+        }
+    }
+    
+    // メッセージを追加する関数
+    function addMessage(text, isUser = false) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.textContent = text;
+        
+        messageDiv.appendChild(contentDiv);
+        messagesDiv.appendChild(messageDiv);
+        
+        // スムーズなスクロール（メッセージの追加後）
+        setTimeout(() => {
+            scrollToLatestContent(messageDiv);
         }, 100);
-    });
-    
-    // ページを離れる前や再読み込み時の確認
-    window.addEventListener('beforeunload', function(e) {
-        if (hasUserInput) {
-            // 標準的なメッセージ（ブラウザによって実際の表示は異なる）
-            const confirmationMessage = '再読み込みすると、ここまで入力したデータは全て消去されます。よろしいですか？';
-            e.returnValue = confirmationMessage;  // Chrome, Firefox, IE
-            return confirmationMessage;           // Safari
-        }
-    });
-
-    // 読み込みツール（医療者用）ボタンのクリックイベント
-    $('#importToolButton').click(function() {
-        // パスワード入力ダイアログを表示
-        const password = prompt('パスワードを入力してください:');
         
-        // パスワードが正しい場合のみ読み込みツールを表示
-        if (password === '7312') {
-            // 項目選択部分を非表示にする
-            $('.item-selection').hide();
-            
-            // 読み込みツールフォームを表示
-            $('#importToolForm').show();
-            
-            // タイトルを更新
-            $('h1').text('読み込みツール（医療者用）');
-            
-            // ページの一番上にスクロール
-            window.scrollTo(0, 0);
-        } else {
-            alert('パスワードが正しくありません。');
-        }
-    });
-
-    // CTCAE（医療者用）ボタンのクリックイベント
-    $('#ctcaeToolButton').click(function() {
-        // パスワード入力ダイアログを表示
-        const password = prompt('パスワードを入力してください:');
-        
-        // パスワードが正しい場合のみCTCAEフォームを表示
-        if (password === '7312') {
-            // 項目選択部分を非表示にする
-            $('.item-selection').hide();
-            
-            // CTCAEフォームを表示
-            $('#ctcaeToolForm').show();
-            
-            // タイトルを更新
-            $('h1').text('CTCAE（医療者用）');
-            
-            // ページの一番上にスクロール
-            window.scrollTo(0, 0);
-        } else {
-            alert('パスワードが正しくありません。');
-        }
-    });
-
-    // CTCAE（医療者用）の確定ボタンのクリックイベント
-    $('#ctcaeOnlyConfirmButton').click(function() {
-        // 必須項目のチェック
-        if (validateCtcaeOnlyForm()) {
-            // 選択された症状を収集
-            const selectedSymptoms = [];
-            
-            $('#ctcaeOnlyForm .ctcae-select').each(function() {
-                const symptomName = $(this).prev('label').text().replace(':', '');
-                const gradeValue = $(this).val();
-                
-                if (gradeValue && gradeValue !== '0') {
-                    selectedSymptoms.push({
-                        name: symptomName,
-                        grade: `Grade ${gradeValue}`
-                    });
-                }
-            });
-            
-            // 現在の日付を取得
-            const today = new Date();
-            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-            
-            // QRコード用データを作成
-            let qrData = `【CTCAE（前立腺癌）】\n入力日：${dateString}\n`;
-            
-            // 選択された症状がある場合のみ追加
-            if (selectedSymptoms.length > 0) {
-                selectedSymptoms.forEach(symptom => {
-                    qrData += `${symptom.name}：${symptom.grade}\n`;
-                });
-            } else {
-                qrData += "該当する症状はありません\n";
-            }
-            
-            // QRコード表示
-            const encodedData = Encoding.convert(qrData, { to: 'SJIS', type: 'string' });
-            $('#ctcae-qrcode').html('').qrcode({
-                width: 256,
-                height: 256,
-                text: encodedData
-            });
-            
-            // テキスト表示
-            $('#ctcae-qrtext').html(qrData.replace(/\n/g, '<br>'));
-            
-            // メールリンクを追加
-            const mailBody = encodeURIComponent(qrData);
-            const mailLink = `<a href="mailto:example@example.com?subject=CTCAE評価結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
-            $('#ctcae-maillink').html(mailLink);
-            
-            // 結果を表示
-            $('#ctcaeResult').show();
-            
-            // フォームを非表示
-            $('#ctcaeOnlyForm').hide();
-            $('#ctcaeOnlyConfirmButton').hide();
-        }
-    });
-
-    // CTCAE（医療者用）の戻るボタンのクリックイベント
-    $('#ctcaeBackButton').click(function() {
-        // CTCAEフォームを非表示
-        $('#ctcaeToolForm').hide();
-        $('#ctcaeResult').hide();
-        
-        // フォームをリセット
-        $('#ctcaeOnlyForm')[0].reset();
-        $('#ctcaeOnlyForm').show();
-        $('#ctcaeOnlyConfirmButton').show();
-        
-        // 項目選択部分を表示
-        $('.item-selection').show();
-        
-        // タイトルを更新
-        $('h1').text('スマート問診アプリ');
-        
-        // ページの一番上にスクロール
-        window.scrollTo(0, 0);
-    });
-
-    // CTCAE（医療者用）フォームのバリデーション
-    function validateCtcaeOnlyForm() {
-        const ctcaeItems = {};
-        
-        $('#ctcaeOnlyForm .ctcae-select').each(function() {
-            const id = $(this).attr('id');
-            ctcaeItems[id] = $(this).val();
-        });
-        
-        // 選択された項目があるか確認
-        let hasSelection = false;
-        for (const key in ctcaeItems) {
-            if (ctcaeItems[key] !== "" && ctcaeItems[key] !== null) {
-                hasSelection = true;
-                break;
-            }
-        }
-        
-        if (!hasSelection) {
-            alert('少なくとも1つの項目を評価してください。');
-            return false;
-        }
-        
-        return true;
+        return messageDiv; // 追加したメッセージ要素を返す
     }
-
-    $('#selection').change(function() {
-        $('.form-section').hide();
-        $('#bmiValue').html('');
-        $('#qrcode').html('');
-        $('#qrText').html('');
-        $('#mailLink').html('');
-
-        // 項目選択のメッセージとプルダウンを非表示にする
-        $('#selection').prev('label').hide();
-        $('#selection').hide();
-
-        // タイトルを変更する
-        const selectedValue = $(this).val();
-        let titleText = 'スマート問診アプリ';
-            if (selectedValue === 'ipss') {
-            titleText = 'IPSS-QOLスコア';
-                $('#ipssForm').show();
-        } else if (selectedValue === 'ctcae') {
-            titleText = 'CTCAE（前立腺癌）';
-            $('#ctcaeForm').show();
-        } else if (selectedValue === 'epic') {
-            titleText = 'EPIC（前立腺癌QOL）';
-            $('#epicForm').show();
-        } else if (selectedValue === 'eq5d') {
-            titleText = 'EQ-5D';
-            $('#eq5dForm').show();
+    
+    // 複数のBOTメッセージを遅延を入れて順番に表示する関数
+    function addBotMessages(messages, currentIndex = 0, delay = 600) {
+        if (currentIndex >= messages.length) return;
+        
+        // 現在のメッセージを表示
+        addMessage(messages[currentIndex], false);
+        
+        // 次のメッセージを遅延を入れて表示
+        if (currentIndex < messages.length - 1) {
+            setTimeout(() => {
+                addBotMessages(messages, currentIndex + 1, delay);
+            }, delay);
         }
-        $('h1').text(titleText); // タイトルを更新
-    });
-
-    const ipssDescriptions = [
-        "全くない", "5回に1回の割合より少ない", "2回に1回の割合より少ない",
-        "2回に1回の割合くらい", "2回に1回の割合より多い", "ほとんどいつも"
-    ];
-
-    const ipssNightDescriptions = [
-        "0回", "1回", "2回", "3回", "4回", "5回以上"
-    ];
-
-    const qolDescriptions = [
-        "とても満足", "満足", "ほぼ満足", "なんともいえない",
-        "やや不満", "いやだ", "とてもいやだ"
-    ];
-
-    $('#ipssSliderQuestion1, #ipssSliderQuestion2, #ipssSliderQuestion3, #ipssSliderQuestion4, #ipssSliderQuestion5, #ipssSliderQuestion6').on('input', function() {
-        const id = $(this).attr('id');
-        const value = $(this).val();
-        $(`#${id}Value`).text(ipssDescriptions[value]);
-    });
-
-    $('#ipssSliderQuestion7').on('input', function() {
-        const value = $(this).val();
-        $('#ipssSliderQuestion7Value').text(ipssNightDescriptions[value]);
-    });
-
-    $('#qolSliderQuestion').on('input', function() {
-        const value = $(this).val();
-        $('#qolSliderQuestionValue').text(qolDescriptions[value]);
-    });
-
-    // 選択されたフォームを保存する配列
-    let selectedForms = [];
-    let currentFormIndex = 0;
-    let formResults = {};
-
-    // 開始ボタンのクリックイベント
-    $('#startButton').click(function() {
-        // 選択されたフォームを取得
-        selectedForms = [];
-        
-        // 指定した順序でフォームを追加（IPSS-QOL、EQ-5D、EPICの順）
-        const formOrder = ['ipss', 'eq5d', 'epic'];
-        
-        // チェックされたフォームを順序通りに追加
-        formOrder.forEach(function(formType) {
-            if ($(`input[name="selected_forms"][value="${formType}"]`).is(':checked')) {
-                selectedForms.push(formType);
-            }
-        });
-
-        if (selectedForms.length === 0) {
-            alert('少なくとも1つの項目を選択してください。');
+    }
+    
+    // 質問を表示する関数
+    function showQuestion(index) {
+        if (index >= questions[currentFormType].length) {
+            handleFormCompletion();
             return;
         }
 
-        // 項目選択部分を非表示にする
-        $('.item-selection').hide();
+        const question = questions[currentFormType][index];
+        const messageDiv = addMessage(question.text, false);
+        messageDiv.setAttribute('data-question-index', index);
+        messageDiv.setAttribute('data-form-type', currentFormType);
         
-        // 進行状況表示を初期化して表示
-        $('#currentFormIndex').text(1);
-        $('#totalForms').text(selectedForms.length);
-        $('#progressBar').css('width', `${(1 / selectedForms.length) * 100}%`);
-        $('.progress-indicator').show();
-        
-        // ナビゲーションボタンを各フォームに追加
-        if (!$('#ipssForm .nav-buttons').length) {
-            $('#ipssForm').append('<div class="nav-buttons"><button type="button" class="nav-btn prev-btn">戻る</button><button type="button" class="nav-btn next-btn">次へ</button></div>');
-        }
-        
-        if (!$('#ctcaeForm .nav-buttons').length) {
-            $('#ctcaeForm').append('<div class="nav-buttons"><button type="button" class="nav-btn prev-btn">戻る</button><button type="button" class="nav-btn next-btn">次へ</button></div>');
-        }
-        
-        if (!$('#eq5dForm .nav-buttons').length) {
-            $('#eq5dForm').append('<div class="nav-buttons"><button type="button" class="nav-btn prev-btn">戻る</button><button type="button" class="nav-btn next-btn">次へ</button></div>');
-        }
-        
-        // 最初のフォームを表示
-        currentFormIndex = 0;
-        showCurrentForm();
-        
-        // ナビゲーションボタンの表示を更新
-        updateNavigationButtons();
-        
-        // ナビゲーションボタンのイベントを設定
-        setupNavigationEvents();
-    });
-
-    // ナビゲーションボタンのイベントを設定する関数
-    function setupNavigationEvents() {
-        // 「戻る」ボタンのクリックイベント
-        $('.nav-btn.prev-btn').off('click').on('click', function() {
-            if (currentFormIndex > 0) {
-                currentFormIndex--;
+        // 質問を表示してから選択肢を表示するまでに遅延を入れる
+        setTimeout(() => {
+            // 質問タイプに応じて表示を変更
+            if (question.type === 'vas') {
+                // VASスライダーを表示
+                const vasContainer = document.createElement('div');
+                vasContainer.className = 'vas-container';
                 
-                // 進行状況を更新
-                $('#currentFormIndex').text(currentFormIndex + 1);
-                $('#progressBar').css('width', `${((currentFormIndex + 1) / selectedForms.length) * 100}%`);
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.min = question.min;
+                slider.max = question.max;
+                slider.value = answers[currentFormType][index] || '';
+                slider.className = 'vas-slider';
                 
-                // 前のフォームを表示
-                showCurrentForm();
-            }
-        });
-        
-        // 「次へ」ボタンのクリックイベント
-        $('.nav-btn.next-btn').off('click').on('click', function() {
-            // 現在のフォームのバリデーション
-            const currentForm = selectedForms[currentFormIndex];
-            
-            if (validateForm(currentForm)) {
-                // フォームの結果を保存
-                saveFormResult(currentForm);
+                const valueDisplay = document.createElement('div');
+                valueDisplay.className = 'vas-value';
+                valueDisplay.innerHTML = `<span id="vas_value">${answers[currentFormType][index] || '選択してください'}</span>/${question.max}`;
                 
-                // 最後のフォームの場合は最終結果を表示
-                if (currentFormIndex === selectedForms.length - 1) {
-                    showFinalResults();
-                    return;
-                }
-                
-                // 次のフォームに進む
-                goToNextForm();
-            }
-        });
-    }
-
-    // ナビゲーションボタンの表示を更新する関数
-    function updateNavigationButtons() {
-        // 単一フォームの場合
-        if (selectedForms.length === 1) {
-            // ナビゲーションボタンを非表示
-            $('.nav-buttons').hide();
-            
-            // 現在のフォームがEPICの場合は、EPICのナビゲーションボタンを表示
-            if (selectedForms[0] === 'epic') {
-                initEpicForm();
-            } else {
-                // それ以外のフォームは通常の確定ボタンを表示
-                if (selectedForms[0] === 'ipss') {
-                    $('#ipssConfirmButton').show();
-                } else if (selectedForms[0] === 'ctcae') {
-                    $('#ctcaeConfirmButton').show();
-                } else if (selectedForms[0] === 'eq5d') {
-                    $('#eq5dConfirmButton').show();
-                }
-            }
-        } else {
-            // 複数フォームの場合
-            // 通常のフォームの確定ボタンを非表示
-            $('#ipssConfirmButton, #ctcaeConfirmButton, #eq5dConfirmButton').hide();
-            
-            // 現在のフォームのナビゲーションボタンを表示
-            $('.nav-buttons').hide().removeClass('first-form');
-            $(`#${selectedForms[currentFormIndex]}Form .nav-buttons`).show();
-            
-            if (currentFormIndex === 0) {
-                // 最初のフォーム
-                $('.nav-btn.prev-btn').hide();
-                $('.nav-btn.next-btn').show().text('次へ').removeClass('confirm-btn');
-                // 最初のフォームの場合、ナビゲーションボタンコンテナにfirst-formクラスを追加
-                $(`#${selectedForms[currentFormIndex]}Form .nav-buttons`).addClass('first-form');
-            } else if (currentFormIndex === selectedForms.length - 1) {
-                // 最後のフォーム
-                $('.nav-btn.prev-btn').show();
-                $('.nav-btn.next-btn').show().text('確定').addClass('confirm-btn');
-            } else {
-                // 中間のフォーム
-                $('.nav-btn.prev-btn').show();
-                $('.nav-btn.next-btn').show().text('次へ').removeClass('confirm-btn');
-            }
-            
-            // 現在のフォームがEPICの場合
-            if (selectedForms[currentFormIndex] === 'epic') {
-                // EPICフォームのナビゲーションを初期化
-                initEpicForm();
-                
-                // 複数フォーム用のナビゲーションボタンを非表示
-                $(`#${selectedForms[currentFormIndex]}Form .nav-buttons`).hide();
-            }
-        }
-    }
-
-    // EPICフォームのナビゲーション
-    let epicCurrentPage = 1;
-    const epicTotalPages = 9;
-    
-    // EPICフォームの初期化
-    function initEpicForm() {
-        epicCurrentPage = 1;
-        $('.epic-page').hide();
-        $('#epicPage1').show();
-        $('#epicCurrentPage').text(epicCurrentPage);
-        $('#epicTotalPages').text(epicTotalPages);
-        updateEpicNavButtons();
-    }
-    
-    // EPICフォームのナビゲーションボタンの表示を更新
-    function updateEpicNavButtons() {
-        if (epicCurrentPage === 1) {
-            // 最初のページの場合
-            // 複数フォームが選択されていて、現在のフォームが最初のフォームでない場合
-            if (selectedForms.length > 1 && currentFormIndex > 0) {
-                $('.epic-prev-btn').prop('disabled', false).css('opacity', '1');
-            } else {
-                $('.epic-prev-btn').prop('disabled', true).css('opacity', '0.5');
-            }
-        } else {
-            // 2ページ目以降の場合
-            $('.epic-prev-btn').prop('disabled', false).css('opacity', '1');
-        }
-        
-        if (epicCurrentPage === epicTotalPages) {
-            // 最後のページでは「次へ」ボタンを「確定」に変更
-            $('.epic-next-btn').text('確定').show();
-        } else {
-            $('.epic-next-btn').text('次へ').show();
-        }
-    }
-    
-    // EPICフォームの「次へ」ボタン
-    $('.epic-next-btn').click(function() {
-        // 現在のページの必須項目をチェック
-        const currentPageInputs = $(`#epicPage${epicCurrentPage}`).find('input[type="radio"]:required');
-        const currentPageQuestions = {};
-        
-        currentPageInputs.each(function() {
-            const name = $(this).attr('name');
-            currentPageQuestions[name] = true;
-        });
-        
-        let allAnswered = true;
-        for (const question in currentPageQuestions) {
-            if (!$(`input[name="${question}"]:checked`).val()) {
-                allAnswered = false;
-                break;
-            }
-        }
-        
-        if (!allAnswered) {
-            alert('全ての質問に回答してください。');
-            return;
-        }
-        
-        // 最後のページで「確定」ボタンがクリックされた場合
-        if (epicCurrentPage === epicTotalPages) {
-            // EPICの結果を保存
-            const qrData = saveEpicResult();
-            
-            // 結果を保存
-            formResults['epic'] = qrData;
-            
-            // 結果を表示
-            showFinalResults();
-            
-            return;
-        }
-        
-        // 次のページに進む
-        if (epicCurrentPage < epicTotalPages) {
-            $(`#epicPage${epicCurrentPage}`).hide();
-            epicCurrentPage++;
-            $(`#epicPage${epicCurrentPage}`).show();
-            $('#epicCurrentPage').text(epicCurrentPage);
-            updateEpicNavButtons();
-            
-            // ページの先頭にスクロール
-            window.scrollTo(0, 0);
-        }
-    });
-
-    // EPICフォームの「戻る」ボタン
-    $('.epic-prev-btn').click(function() {
-        // 最初のページで「戻る」ボタンが押された場合
-        if (epicCurrentPage === 1) {
-            // 複数フォームが選択されている場合
-            if (selectedForms.length > 1 && currentFormIndex > 0) {
-                // 前のフォームに戻る
-                currentFormIndex--;
-                
-                // 進行状況を更新
-                $('#currentFormIndex').text(currentFormIndex + 1);
-                $('#progressBar').css('width', `${((currentFormIndex + 1) / selectedForms.length) * 100}%`);
-                
-                // 前のフォームを表示
-                showCurrentForm();
-            } else {
-                // 単一フォームの場合または最初のフォームの場合は何もしない
-                return;
-            }
-        } else {
-            // 2ページ目以降の場合は通常の戻る処理
-            $(`#epicPage${epicCurrentPage}`).hide();
-            epicCurrentPage--;
-            $(`#epicPage${epicCurrentPage}`).show();
-            $('#epicCurrentPage').text(epicCurrentPage);
-            updateEpicNavButtons();
-            
-            // ページの先頭にスクロール
-            window.scrollTo(0, 0);
-        }
-    });
-
-    // フォームのバリデーションを行う関数
-    function validateForm(formType) {
-        switch (formType) {
-            case 'ipss':
-                return validateIpssForm();
-            case 'ctcae':
-                return validateCtcaeForm();
-            case 'epic':
-                return validateEpicForm();
-            case 'eq5d':
-                return validateEq5dForm();
-            default:
-                return true;
-        }
-    }
-
-    // IPSSフォームのバリデーション
-    function validateIpssForm() {
-        const ipssScores = [
-            parseInt($('input[name="ipssQuestion1"]:checked').val() || NaN),
-            parseInt($('input[name="ipssQuestion2"]:checked').val() || NaN),
-            parseInt($('input[name="ipssQuestion3"]:checked').val() || NaN),
-            parseInt($('input[name="ipssQuestion4"]:checked').val() || NaN),
-            parseInt($('input[name="ipssQuestion5"]:checked').val() || NaN),
-            parseInt($('input[name="ipssQuestion6"]:checked').val() || NaN),
-            parseInt($('input[name="ipssQuestion7"]:checked').val() || NaN)
-        ];
-
-        const qolScore = parseInt($('input[name="qolQuestion"]:checked').val() || NaN);
-
-        if (ipssScores.includes(NaN) || isNaN(qolScore)) {
-            alert('全ての項目を入力してください。');
-            return false;
-        }
-        
-        return true;
-    }
-
-    // CTCAEフォームのバリデーション
-    function validateCtcaeForm() {
-        const ctcaeItems = {
-            'enteritis': $('#enteritis').val(),
-            'rectalUlcer': $('#rectalUlcer').val(),
-            'lowerGIHemorrhage': $('#lowerGIHemorrhage').val(),
-            'analPain': $('#analPain').val(),
-            'fecalIncontinence': $('#fecalIncontinence').val(),
-            'ileus': $('#ileus').val(),
-            'cystitisNoninfective': $('#cystitisNoninfective').val(),
-            'urinaryRetention': $('#urinaryRetention').val(),
-            'hematuria': $('#hematuria').val(),
-            'urinaryTractPain': $('#urinaryTractPain').val(),
-            'urinaryIncontinence': $('#urinaryIncontinence').val(),
-            'fatigue': $('#fatigue').val(),
-            'dermatitisRadiation': $('#dermatitisRadiation').val()
-        };
-
-        // 選択された項目があるか確認
-        let hasSelection = false;
-        for (const key in ctcaeItems) {
-            if (ctcaeItems[key] !== "" && ctcaeItems[key] !== null) {
-                hasSelection = true;
-                break;
-            }
-        }
-
-        if (!hasSelection) {
-            alert('少なくとも1つの項目を評価してください。');
-            return false;
-        }
-        
-        return true;
-    }
-
-    // EPICフォームのバリデーション
-    function validateEpicForm() {
-        // 現在表示されているページの必須項目をチェック
-        const currentPageInputs = $('.epic-page:visible').find('input[type="radio"]:required');
-        const currentPageQuestions = {};
-        
-        currentPageInputs.each(function() {
-            const name = $(this).attr('name');
-            currentPageQuestions[name] = true;
-        });
-        
-        let allAnswered = true;
-        for (const question in currentPageQuestions) {
-            if (!$(`input[name="${question}"]:checked`).val()) {
-                allAnswered = false;
-                break;
-            }
-        }
-        
-        if (!allAnswered) {
-            alert('全ての質問に回答してください。');
-            return false;
-        }
-        
-        return true;
-    }
-
-    // EQ-5Dフォームのバリデーション
-    function validateEq5dForm() {
-        const eq5dValues = {
-            mobility: $('input[name="eq5d_mobility"]:checked').val(),
-            selfcare: $('input[name="eq5d_selfcare"]:checked').val(),
-            activities: $('input[name="eq5d_activities"]:checked').val(),
-            pain: $('input[name="eq5d_pain"]:checked').val(),
-            anxiety: $('input[name="eq5d_anxiety"]:checked').val(),
-            vas: $('#eq5d_vas').val()
-        };
-
-        // 全ての項目が入力されているか確認
-        for (const key in eq5dValues) {
-            if (!eq5dValues[key]) {
-                alert('全ての項目を入力してください。');
-                return false;
-            }
-        }
-        
-        // スライダーの値が初期値（空または「選択してください」の状態）かどうかを確認
-        if (eq5dValues.vas === '' || $('#eq5d_vas_value').text() === '選択してください') {
-            alert('健康状態のスライダーを動かして値を選択してください。');
-            return false;
-        }
-        
-        return true;
-    }
-
-    // フォームの結果を保存する関数
-    function saveFormResult(formType) {
-        switch (formType) {
-            case 'ipss':
-                // IPSSスコアの計算
-                const ipssScores = [];
-                let ipssTotal = 0;
-                
-                for (let i = 1; i <= 7; i++) {
-                    const score = parseInt($(`input[name="ipssQuestion${i}"]:checked`).val(), 10);
-                    ipssScores.push(score);
-                    ipssTotal += score;
-                }
-                
-                // QOLスコア
-                const qolScore = parseInt($('input[name="qolQuestion"]:checked').val(), 10);
-                ipssScores.push(qolScore);
-                
-                // 現在の日付を取得
-                const today = new Date();
-                const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-                
-                // QRコード用データを作成
-                let ipssData = `【IPSS-QOLスコア】\n入力日：${dateString}\n`;
-                ipssData += `IPSS-QOL：${ipssScores.join('-')}\n`;
-                ipssData += `IPSS-QOL合計点：${ipssTotal}点\n`;
-                
-                // 結果を保存
-                formResults['ipss'] = ipssData;
-                break;
-                
-            case 'ctcae':
-                // 選択された症状を収集
-                const selectedSymptoms = [];
-                
-                $('.ctcae-select').each(function() {
-                    const symptomName = $(this).prev('label').text().replace(':', '');
-                    const gradeValue = $(this).val();
-                    
-                    if (gradeValue && gradeValue !== '0') {
-                        selectedSymptoms.push({
-                            name: symptomName,
-                            grade: `Grade ${gradeValue}`
-                        });
-                    }
-                });
-                
-                // 現在の日付を取得
-                const ctcaeToday = new Date();
-                const ctcaeDateString = `${ctcaeToday.getFullYear()}/${ctcaeToday.getMonth() + 1}/${ctcaeToday.getDate()}`;
-                
-                // QRコード用データを作成
-                let ctcaeData = `【CTCAE（前立腺癌）】\n入力日：${ctcaeDateString}\n`;
-                
-                // 選択された症状がある場合のみ追加
-                if (selectedSymptoms.length > 0) {
-                    selectedSymptoms.forEach(symptom => {
-                        ctcaeData += `${symptom.name}：${symptom.grade}\n`;
-                    });
-                } else {
-                    ctcaeData += "該当する症状はありません\n";
-                }
-                
-                // 結果を保存
-                formResults['ctcae'] = ctcaeData;
-                break;
-                
-            case 'epic':
-                // EPICの結果を保存
-                formResults['epic'] = saveEpicResult();
-                break;
-                
-            case 'eq5d':
-                // EQ-5Dの値を取得
-                const eq5dValues = {
-                    mobility: $('input[name="eq5d_mobility"]:checked').val(),
-                    selfcare: $('input[name="eq5d_selfcare"]:checked').val(),
-                    activities: $('input[name="eq5d_activities"]:checked').val(),
-                    pain: $('input[name="eq5d_pain"]:checked').val(),
-                    anxiety: $('input[name="eq5d_anxiety"]:checked').val(),
-                    vas: $('#eq5d_vas').val()
+                // スライダーの値が変更されたときの処理
+                slider.oninput = function() {
+                    valueDisplay.innerHTML = `<span id="vas_value">${this.value}</span>/${question.max}`;
+                    answers[currentFormType][index] = this.value;
                 };
                 
-                // 現在の日付を取得
-                const eq5dToday = new Date();
-                const eq5dDateString = `${eq5dToday.getFullYear()}/${eq5dToday.getMonth() + 1}/${eq5dToday.getDate()}`;
+                // 確定ボタン
+                const confirmButton = document.createElement('button');
+                confirmButton.className = 'option-button vas-confirm';
+                confirmButton.textContent = '確定';
+                confirmButton.onclick = function() {
+                    if (answers[currentFormType][index]) {
+                        // ボタンにconfirmedクラスを追加してブルーのままにする
+                        confirmButton.classList.add('confirmed');
+                        
+                        // 次の質問へ進む
+                        currentQuestionIndex++;
+                        
+                        setTimeout(() => {
+                            if (currentQuestionIndex < questions[currentFormType].length) {
+                                showQuestion(currentQuestionIndex);
+                            } else {
+                                handleFormCompletion();
+                            }
+                        }, 600);
+                    } else {
+                        // 値が選択されていない場合は警告
+                        alert('値を選択してください');
+                    }
+                };
                 
-                // EQ-5Dスコアを配列に格納
-                const eq5dScores = [
-                    eq5dValues.mobility,
-                    eq5dValues.selfcare,
-                    eq5dValues.activities,
-                    eq5dValues.pain,
-                    eq5dValues.anxiety
-                ];
+                vasContainer.appendChild(slider);
+                vasContainer.appendChild(valueDisplay);
+                vasContainer.appendChild(confirmButton);
+                messageDiv.appendChild(vasContainer);
+            } else {
+                // 通常の選択肢を表示
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'options';
+                optionsDiv.setAttribute('data-question-id', question.id);
                 
-                // QRコード用データを作成
-                let eq5dData = `【EQ-5D】\n入力日：${eq5dDateString}\n`;
-                eq5dData += `EQ-5D：${eq5dScores.join('-')}\n`;
-                eq5dData += `健康状態(VAS)：${eq5dValues.vas}/100\n`;
+                question.options.forEach((option, optionIndex) => {
+                    const button = document.createElement('button');
+                    button.className = 'option-button';
+                    
+                    // もし既に回答済みならselectedクラスを追加
+                    if (answers[currentFormType][index] === option) {
+                        button.classList.add('selected');
+                    }
+                    
+                    button.textContent = option;
+                    button.setAttribute('data-question-index', index);
+                    button.setAttribute('data-option-index', optionIndex);
+                    button.setAttribute('data-form-type', currentFormType);
+                    button.onclick = function() {
+                        handleOptionClick(this, index, option);
+                    };
+                    
+                    optionsDiv.appendChild(button);
+                });
                 
-                // 結果を保存
-                formResults['eq5d'] = eq5dData;
-                break;
+                messageDiv.appendChild(optionsDiv);
+            }
+            
+            // 質問と選択肢が表示された後にスクロール
+            setTimeout(() => {
+                scrollToLatestContent(messageDiv.lastChild);
+            }, 200);
+        }, 600); // 質問を表示してから選択肢を表示するまでの遅延
+    }
+    
+    // 選択肢クリック時の処理
+    function handleOptionClick(buttonElement, questionIndex, selectedOption) {
+        const formType = buttonElement.getAttribute('data-form-type');
+        const currentOptions = document.querySelectorAll(`.options[data-question-id="${questions[formType][questionIndex].id}"] .option-button`);
+        
+        // 同じ質問の全ての選択肢からselectedクラスを削除
+        currentOptions.forEach(button => {
+            button.classList.remove('selected');
+            button.classList.remove('animated-select');
+        });
+        
+        // クリックされた選択肢にselectedクラスを追加
+        buttonElement.classList.add('selected');
+        
+        // 回答を保存
+        answers[formType][questionIndex] = selectedOption;
+        
+        // 色の変化だけで選択を示す
+        $(buttonElement).addClass('animated-select');
+        
+        // 選択肢が画面の下部にある場合は選択した選択肢が見えるようにスクロール
+        scrollToLatestContent(buttonElement, 150);
+        
+        // 過去の質問の回答を変更した場合
+        if (formType === currentFormType && questionIndex !== currentQuestionIndex) {
+            handlePastAnswerChange(formType, questionIndex);
+            return;
+        }
+        
+        // 現在の質問の場合、次の質問へ進む
+        if (formType === currentFormType && questionIndex === currentQuestionIndex) {
+            // 次の質問のインデックスを設定
+            currentQuestionIndex++;
+            
+            // 少し遅延させて次の質問を表示
+            setTimeout(() => {
+                if (currentQuestionIndex < questions[currentFormType].length) {
+                    showQuestion(currentQuestionIndex);
+                } else {
+                    handleFormCompletion();
+                }
+            }, 600); // 遅延を少し長くして選択のアニメーションを見せる
         }
     }
-
-    // IPSSフォームの確定ボタンのクリックイベント
-    $('#ipssConfirmButton').click(function() {
-        // 必須項目のチェック
-        if (validateIpssForm()) {
-            // IPSSスコアの計算
-            const ipssScores = [];
-            let ipssTotal = 0;
-            
-            for (let i = 1; i <= 7; i++) {
-                const score = parseInt($(`input[name="ipssQuestion${i}"]:checked`).val(), 10);
-                ipssScores.push(score);
-                ipssTotal += score;
+    
+    // 過去の回答変更時の処理
+    function handlePastAnswerChange(formType, questionIndex) {
+        // 回答内容の更新のみを行う
+        const selectedOption = answers[formType][questionIndex];
+        
+        // 選択された回答を視覚的に反映
+        const currentOptions = document.querySelectorAll(`.options[data-question-id="${questions[formType][questionIndex].id}"] .option-button`);
+        currentOptions.forEach(button => {
+            if (button.textContent === selectedOption) {
+                button.classList.add('selected', 'animated-select');
+            } else {
+                button.classList.remove('selected');
+                button.classList.remove('animated-select');
             }
-            
-            // QOLスコア
-            const qolScore = parseInt($('input[name="qolQuestion"]:checked').val(), 10);
-            ipssScores.push(qolScore);
-            
-            // 現在の日付を取得
-            const today = new Date();
-            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-            
-            // QRコード用データを作成
-            let qrData = `【IPSS-QOLスコア】\n入力日：${dateString}\n`;
-            qrData += `IPSS-QOL：${ipssScores.join('-')}\n`;
-            qrData += `IPSS-QOL合計点：${ipssTotal}点\n`;
-            
-            // 結果を保存
-            formResults['ipss'] = qrData;
-            
-            // 結果を表示
-            showFinalResults();
+        });
+        
+        // 選択肢が画面の下部にある場合は選択した選択肢が見えるようにスクロール
+        const selectedButton = Array.from(currentOptions).find(button => button.textContent === selectedOption);
+        if (selectedButton) {
+            scrollToLatestContent(selectedButton, 150);
         }
-    });
-
-    // CTCAEフォームの確定ボタンのクリックイベント
-    $('#ctcaeConfirmButton').click(function() {
-        // 必須項目のチェック
-        if (validateCtcaeForm()) {
-            // 選択された症状を収集
-            const selectedSymptoms = [];
-            
-            $('.ctcae-select').each(function() {
-                const symptomName = $(this).prev('label').text().replace(':', '');
-                const gradeValue = $(this).val();
+    }
+    
+    // フォーム完了時の処理
+    function handleFormCompletion() {
+        if (currentFormType === 'ipss') {
+            // IPSSが終了したら、EQ-5Dに進む
+            setTimeout(() => {
+                // 複数のメッセージを遅延を入れて表示
+                addBotMessages([
+                    "前半の質問は終了しました。続いて後半の質問に移ります。",
+                    "後半では、生活の質についてお聞きします。"
+                ]);
                 
-                if (gradeValue && gradeValue !== '0') {
-                    selectedSymptoms.push({
-                        name: symptomName,
-                        grade: `Grade ${gradeValue}`
-                    });
-                }
+                // 次のフォームの最初の質問を表示（最後のメッセージから十分な時間をあけて）
+                setTimeout(() => {
+                    currentFormType = 'eq5d';
+                    currentQuestionIndex = 0;
+                    showQuestion(currentQuestionIndex);
+                }, 1200);
+            }, 600);
+        } else if (currentFormType === 'eq5d') {
+            // EQ-5Dが終了したら、結果を表示
+            setTimeout(() => {
+                showResults();
+            }, 600);
+        }
+    }
+    
+    // 結果を表示する関数
+    function showResults() {
+        const messageDiv = addMessage("全ての質問が終了しました。ご協力ありがとうございました。", false);
+        
+        // 結果セクションを表示
+        setTimeout(() => {
+            // 結果メッセージを設定
+            const resultMessage = "院内でご回答の方は、端末をスタッフにご提示ください。<br>オンラインでご回答の方は、以下のボタンからPSA値の入力画面に進んでください。";
+            $('#resultMessage').html(resultMessage);
+            
+            // 結果セクションを表示
+            $('#resultSection').show();
+            
+            // 結果の要約を非表示にする
+            $('#resultSummary').hide();
+            
+            // オンライン回答ボタンの生成（mail-linkクラスをonline-buttonクラスに変更）
+            const onlineButton = '<a href="#psaSection" class="online-button" id="onlineButton">オンラインで回答の方はこちら</a>';
+            $('#mailContainer').html(onlineButton);
+            
+            // オンライン回答ボタンのクリックイベント
+            $('#onlineButton').on('click', function(e) {
+                e.preventDefault();
+                
+                // PSA入力フォームを表示
+                $('#psaSection').show();
+                
+                // フォームまでスクロール
+                $('html, body').animate({
+                    scrollTop: $('#psaSection').offset().top - 50
+                }, 600);
             });
             
-            // 現在の日付を取得
-            const today = new Date();
-            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+            // QRコードの生成
+            generateQRCode(answers);
             
-            // QRコード用データを作成
-            let qrData = `【CTCAE（前立腺癌）】\n入力日：${dateString}\n`;
-            
-            // 選択された症状がある場合のみ追加
-            if (selectedSymptoms.length > 0) {
-                selectedSymptoms.forEach(symptom => {
-                    qrData += `${symptom.name}：${symptom.grade}\n`;
-                });
-            } else {
-                qrData += "該当する症状はありません\n";
-            }
-            
-            // 結果を保存
-            formResults['ctcae'] = qrData;
-            
-            // 結果を表示
-            showFinalResults();
-        }
-    });
-
-    // EPICフォームの結果を保存する関数
-    function saveEpicResult() {
-        // 全ての回答を収集
-        // 排尿の状態（問1～問7）
-        const urinaryAnswers = [];
-        for (let i = 1; i <= 5; i++) {
-            urinaryAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-        }
-        // 問6のサブ質問（a～f）
-        for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-            const letter = String.fromCharCode(c);
-            urinaryAnswers.push($(`input[name="epic_q6${letter}"]:checked`).val());
-        }
-        // 問7
-        urinaryAnswers.push($(`input[name="epic_q7"]:checked`).val());
-        
-        // 排便とおなかの状態（問8～問16）
-        const bowelAnswers = [];
-        for (let i = 8; i <= 14; i++) {
-            bowelAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-        }
-        // 問15のサブ質問（a～f）
-        for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-            const letter = String.fromCharCode(c);
-            bowelAnswers.push($(`input[name="epic_q15${letter}"]:checked`).val());
-        }
-        // 問16
-        bowelAnswers.push($(`input[name="epic_q16"]:checked`).val());
-        
-        // 性機能（問17～問25）
-        const sexualAnswers = [];
-        // 問17のサブ質問（a～c）
-        for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-            const letter = String.fromCharCode(c);
-            sexualAnswers.push($(`input[name="epic_q17${letter}"]:checked`).val());
-        }
-        // 問18～問23
-        for (let i = 18; i <= 23; i++) {
-            sexualAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-        }
-        // 問24のサブ質問（a～c）
-        for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-            const letter = String.fromCharCode(c);
-            sexualAnswers.push($(`input[name="epic_q24${letter}"]:checked`).val());
-        }
-        // 問25
-        sexualAnswers.push($(`input[name="epic_q25"]:checked`).val());
-        
-        // ホルモン機能（問26～問31）
-        const hormoneAnswers = [];
-        // 問26～問30
-        for (let i = 26; i <= 30; i++) {
-            hormoneAnswers.push($(`input[name="epic_q${i}"]:checked`).val());
-        }
-        // 問31のサブ質問（a～f）
-        for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-            const letter = String.fromCharCode(c);
-            hormoneAnswers.push($(`input[name="epic_q31${letter}"]:checked`).val());
-        }
-        
-        // 全体的な満足度（問32）
-        const satisfactionAnswer = $(`input[name="epic_q32"]:checked`).val();
-        
+            // 結果セクションまでスクロール
+            setTimeout(() => {
+                $('html, body').animate({
+                    scrollTop: $('#resultSection').offset().top - 50
+                }, 600);
+            }, 200);
+        }, 1000);
+    }
+    
+    // フォーマットされたテキストを生成する関数
+    function generateFormattedText(data) {
         // 現在の日付を取得
         const today = new Date();
         const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
         
-        // QRコード用データを作成
-        let qrData = `【EPIC（前立腺癌QOL）】\n入力日：${dateString}\n`;
-        qrData += `排尿の状態:${urinaryAnswers.join('-')}\n`;
-        qrData += `排便とおなかの状態:${bowelAnswers.join('-')}\n`;
-        qrData += `性機能:${sexualAnswers.join('-')}\n`;
-        qrData += `ホルモン機能:${hormoneAnswers.join('-')}\n`;
-        qrData += `全体的な満足度:${satisfactionAnswer}\n`;
+        // フォーマットされたテキストを生成
+        let formattedText = `入力日：${dateString}\r\n`;
         
-        return qrData;
-    }
-
-    // EQ-5Dフォームの確定ボタンのクリックイベント
-    $('#eq5dConfirmButton').click(function() {
-        // 必須項目のチェック
-        if (validateEq5dForm()) {
-            // EQ-5Dの値を取得
-            const eq5dValues = {
-                mobility: $('input[name="eq5d_mobility"]:checked').val(),
-                selfcare: $('input[name="eq5d_selfcare"]:checked').val(),
-                activities: $('input[name="eq5d_activities"]:checked').val(),
-                pain: $('input[name="eq5d_pain"]:checked').val(),
-                anxiety: $('input[name="eq5d_anxiety"]:checked').val(),
-                vas: $('#eq5d_vas').val()
-            };
+        // IPSSの結果を追加
+        if (data.ipss && data.ipss.length > 0) {
+            formattedText += `【IPSS-QOLスコア】\r\n`;
             
-            // 現在の日付を取得
-            const today = new Date();
-            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+            // IPSSスコアを取得（0点始まり）
+            const ipssScores = data.ipss.slice(0, 7).map(answer => {
+                const index = questions.ipss.findIndex((q, i) => i < 7 && q.options.indexOf(answer) !== -1);
+                return index !== -1 ? questions.ipss[index].options.indexOf(answer) : 0;
+            });
             
-            // EQ-5Dスコアを配列に格納
-            const eq5dScores = [
-                eq5dValues.mobility,
-                eq5dValues.selfcare,
-                eq5dValues.activities,
-                eq5dValues.pain,
-                eq5dValues.anxiety
-            ];
+            // QOLスコアを取得（0点始まり）
+            const qolScore = data.ipss[7] ? questions.ipss[7].options.indexOf(data.ipss[7]) : 0;
             
-            // QRコード用データを作成
-            let qrData = `【EQ-5D】\n入力日：${dateString}\n`;
-            qrData += `EQ-5D：${eq5dScores.join('-')}\n`;
-            qrData += `健康状態(VAS)：${eq5dValues.vas}/100\n`;
+            // 合計点を計算
+            const ipssTotal = ipssScores.reduce((sum, score) => sum + score, 0);
             
-            // 結果を保存
-            formResults['eq5d'] = qrData;
-            
-            // 結果を表示
-            showFinalResults();
+            // スコアを追加
+            formattedText += `IPSS-QOL：${ipssScores.join('-')}-${qolScore}\r\n`;
+            formattedText += `IPSS-QOL合計点：${ipssTotal}点\r\n`;
         }
-    });
-
-    // 次のフォームに進む関数
-    function goToNextForm() {
-        currentFormIndex++;
         
-        // 進行状況を更新
-        $('#currentFormIndex').text(currentFormIndex + 1);
-        $('#progressBar').css('width', `${((currentFormIndex + 1) / selectedForms.length) * 100}%`);
-        
-        if (currentFormIndex < selectedForms.length) {
-            // 次のフォームを表示
-            showCurrentForm();
+        // EQ-5Dの結果を追加
+        if (data.eq5d && data.eq5d.length > 0) {
+            formattedText += `【EQ-5D】\r\n`;
             
-            // ページの一番上にスクロール
-            window.scrollTo(0, 0);
-        } else {
-            // すべてのフォームが完了した場合
-            showFinalResults();
+            // EQ-5Dスコアを取得（最初の5問、0点始まり）
+            const eq5dScores = data.eq5d.slice(0, 5).map(answer => {
+                const index = questions.eq5d.findIndex((q, i) => i < 5 && q.options.indexOf(answer) !== -1);
+                return index !== -1 ? questions.eq5d[index].options.indexOf(answer) : 0;
+            });
             
-            // ページの一番上にスクロール
-            window.scrollTo(0, 0);
-        }
-    }
-
-    // 最終結果を表示する関数
-    function showFinalResults() {
-        // すべてのフォームを非表示
-        $('.form-section').hide();
-        $('.progress-indicator').hide();
-        
-        // タイトルを更新
-        $('h1').text('回答完了');
-        
-        // 結果を結合
-        const today = new Date();
-        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-        
-        let combinedQrData = `入力日：${dateString}\n`;
-        
-        // 各フォームの結果を指定した順序で追加（IPSS-QOL、EQ-5D、EPICの順）
-        const formOrder = ['ipss', 'eq5d', 'epic'];
-        
-        // 指定した順序でフォームの結果を追加
-        for (const formType of formOrder) {
-            // フォームの結果が存在する場合のみ追加
-            if (formResults[formType]) {
-                // フォームデータから入力日を除去
-                const formLines = formResults[formType].split('\n');
-                
-                // 最初の行がタイトル行でない場合、タイトルを追加
-                if (!formLines[0].startsWith('【')) {
-                    combinedQrData += `【${getFormTitle(formType)}】\n`;
-                } else {
-                    // タイトル行をそのまま追加
-                    combinedQrData += `${formLines[0]}\n`;
-                }
-                
-                // 入力日の行をスキップして残りの行を追加
-                for (let i = 1; i < formLines.length; i++) {
-                    if (!formLines[i].startsWith('入力日：')) {
-                        combinedQrData += `${formLines[i]}\n`;
-                    }
-                }
+            // スコアを追加
+            formattedText += `EQ-5D：${eq5dScores.join('-')}\r\n`;
+            
+            // VASの値を追加（6問目）
+            if (data.eq5d[5]) {
+                formattedText += `健康状態(VAS)：${data.eq5d[5]}/100\r\n`;
             }
         }
         
-        const encodedData = Encoding.convert(combinedQrData, { to: 'SJIS', type: 'string' });
+        return formattedText;
+    }
+    
+    // Excel用のCSV形式テキストを生成する関数
+    function generateCsvText(data) {
+        // 現在の日付を取得
+        const today = new Date();
+        const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
         
-        // QRコード表示
-        $('#combined-qrcode').html('').qrcode({
+        // ヘッダー行を作成
+        let headers = ["Date"];
+        let values = [dateString];
+        
+        // IPSSの結果を追加
+        if (data.ipss && data.ipss.length > 0) {
+            // IPSSスコアを取得（0点始まり）
+            const ipssScores = data.ipss.slice(0, 7).map(answer => {
+                const index = questions.ipss.findIndex((q, i) => i < 7 && q.options.indexOf(answer) !== -1);
+                return index !== -1 ? questions.ipss[index].options.indexOf(answer) : 0;
+            });
+            
+            // QOLスコアを取得（0点始まり）
+            const qolScore = data.ipss[7] ? questions.ipss[7].options.indexOf(data.ipss[7]) : 0;
+            
+            // ヘッダーとスコアを追加
+            for (let i = 0; i < ipssScores.length; i++) {
+                headers.push(`IPSS-QOL-Q${i+1}`);
+                values.push(ipssScores[i]);
+            }
+            
+            headers.push("IPSS-QOL-QOL");
+            values.push(qolScore);
+        }
+        
+        // EQ-5Dの結果を追加
+        if (data.eq5d && data.eq5d.length > 0) {
+            // EQ-5Dスコアを取得（最初の5問、0点始まり）
+            const eq5dScores = data.eq5d.slice(0, 5).map(answer => {
+                const index = questions.eq5d.findIndex((q, i) => i < 5 && q.options.indexOf(answer) !== -1);
+                return index !== -1 ? questions.eq5d[index].options.indexOf(answer) : 0;
+            });
+            
+            // ヘッダーとスコアを追加
+            for (let i = 0; i < eq5dScores.length; i++) {
+                headers.push(`EQ-5D-Q${i+1}`);
+                values.push(eq5dScores[i]);
+            }
+            
+            // VASの値を追加（6問目）
+            if (data.eq5d[5]) {
+                headers.push("EQ-5D-VAS");
+                values.push(data.eq5d[5]);
+            }
+        }
+        
+        // タブ区切りのCSV形式で出力（改行コードを\rに変更）
+        return headers.join('\t') + '\r' + values.join('\t');
+    }
+    
+    // QRコード生成関数
+    function generateQRCode(data) {
+        // 現在のQRコード表示エリアをクリア
+        $('#qrcode').empty();
+        
+        // QRコード表示エリアを作成
+        const qrContainer = $('<div class="qr-container"></div>');
+        const qrDisplay = $('<div id="qrDisplay"></div>');
+        const qrSwitchButtons = $('<div class="qr-switch-buttons"></div>');
+        
+        // 通常形式ボタン
+        const normalButton = $('<button class="qr-switch-btn active">通常形式</button>');
+        normalButton.on('click', function() {
+            $(this).addClass('active').siblings().removeClass('active');
+            generateNormalQR(data);
+        });
+        
+        // Excel形式ボタン
+        const excelButton = $('<button class="qr-switch-btn">Excel形式</button>');
+        excelButton.on('click', function() {
+            $(this).addClass('active').siblings().removeClass('active');
+            generateExcelQR(data);
+        });
+        
+        // ボタンを追加
+        qrSwitchButtons.append(normalButton).append(excelButton);
+        
+        // コンテナに要素を追加
+        qrContainer.append(qrDisplay).append(qrSwitchButtons);
+        $('#qrcode').append(qrContainer);
+        
+        // デフォルトで通常形式のQRコードを表示
+        generateNormalQR(data);
+    }
+    
+    // 通常形式のQRコードを生成
+    function generateNormalQR(data) {
+        const formattedText = generateFormattedText(data);
+        
+        // UTF-8からShift_JISに変換
+        const utf8Array = Encoding.stringToCode(formattedText);
+        const sjisArray = Encoding.convert(utf8Array, {
+            to: 'SJIS',
+            from: 'UNICODE'
+        });
+        
+        // バイナリ文字列に変換
+        const sjisStr = Encoding.codeToString(sjisArray);
+        
+        // QRコード生成
+        $('#qrDisplay').empty().qrcode({
             width: 256,
             height: 256,
-            text: encodedData
+            text: sjisStr
         });
-        $('#combined-qrtext').html(combinedQrData.replace(/\n/g, '<br>'));
         
-        // メールリンクを追加
-        const mailBody = encodeURIComponent(combinedQrData);
-        const mailLink = `<a href="mailto:example@example.com?subject=問診結果&body=${mailBody}" class="mail-link">メールで送信</a>`;
-        $('#combined-maillink').html(mailLink);
-        
-        // 最終結果を表示
-        $('#final-results').show();
-        
-        // ページの一番上にスクロール
-        window.scrollTo(0, 0);
+        // QRコードの下に説明を追加
+        $('#qrDisplay').append('<p class="qr-description">通常形式：問診結果の詳細</p>');
     }
-
-    // フォーム名から表示名を取得する関数
+    
+    // Excel形式のQRコードを生成
+    function generateExcelQR(data) {
+        const csvText = generateCsvText(data);
+        
+        // UTF-8からShift_JISに変換
+        const utf8Array = Encoding.stringToCode(csvText);
+        const sjisArray = Encoding.convert(utf8Array, {
+            to: 'SJIS',
+            from: 'UNICODE'
+        });
+        
+        // バイナリ文字列に変換
+        const sjisStr = Encoding.codeToString(sjisArray);
+        
+        // QRコード生成
+        $('#qrDisplay').empty().qrcode({
+            width: 256,
+            height: 256,
+            text: sjisStr
+        });
+        
+        // QRコードの下に説明を追加
+        $('#qrDisplay').append('<p class="qr-description">Excel形式：タブ区切りCSV（Excelに貼り付け可能）</p>');
+    }
+    
+    // ウィンドウサイズ変更時にもスクロール位置を調整
+    $(window).on('resize', function() {
+        if (currentQuestionIndex > 0) {
+            // 現在の質問のオプションが見えるようにスクロール
+            const currentSelector = `.options[data-question-id="${questions[currentFormType][Math.min(currentQuestionIndex, questions[currentFormType].length - 1)].id}"]`;
+            const currentElement = document.querySelector(currentSelector);
+            if (currentElement) {
+                scrollToLatestContent(currentElement);
+            }
+        }
+    });
+    
+    // フォーム名を取得する関数
     function getFormTitle(form) {
         switch (form) {
             case 'ipss': return 'IPSS-QOLスコア';
-            case 'ctcae': return 'CTCAE（前立腺癌）';
-            case 'epic': return 'EPIC（前立腺癌QOL）';
             case 'eq5d': return 'EQ-5D';
+            case 'epic': return 'EPIC（前立腺癌QOL）';
             default: return '';
         }
     }
 
-    // フォーム名から文書コードを取得する関数
     function getDocCode(form) {
         switch (form) {
-            case 'ipss': return '991001';
-            case 'ctcae': return '991002';
-            case 'epic': return '991003';
-            case 'eq5d': return '991004';
-            default: return '999999';
+            case 'ipss': return 'IPSS';
+            case 'eq5d': return 'EQ5D';
+            case 'epic': return 'EPIC';
+            default: return '';
         }
     }
 
-    // VASスライダーの初期化と値の表示
-    $('#eq5d_vas').val('');
-    $('#eq5d_vas_value').text('選択してください');
-    
-    // スライダーの値が変更されたときの処理
-    $('#eq5d_vas').on('input', function() {
-        $('#eq5d_vas_value').text($(this).val());
-    });
-
-    function generateQRCode(data) {
-        $('#qrcode').html('').qrcode({
-            width: 256,
-            height: 256,
-            text: data
-        });
+    // PSA値の入力内容を文字列に変換する関数
+    function generatePsaText() {
+        let psaText = '【PSA検査値】\r\n';
+        let hasData = false;
+        
+        // 3回分のPSA値をチェック
+        for (let i = 1; i <= 3; i++) {
+            const date = $(`#psaDate${i}`).val();
+            const value = $(`#psaValue${i}`).val();
+            
+            if (date && value) {
+                hasData = true;
+                psaText += `${date}：${value} ng/mL\r\n`;
+            }
+        }
+        
+        return hasData ? psaText : '';
     }
 
-    // 現在のフォームを表示する関数
-    function showCurrentForm() {
-        // すべてのフォームを非表示
-        $('.form-section').hide();
+    // PSA入力フォームの送信処理
+    $(document).on('click', '#psaSubmitButton', function() {
+        // フォーマットされたテキストを生成
+        const formattedText = generateFormattedText(answers);
         
-        // 現在のフォームを表示
-        const currentForm = selectedForms[currentFormIndex];
-        $(`#${currentForm}Form`).show();
+        // PSA値の入力内容を追加
+        const psaText = generatePsaText();
         
-        // タイトルを更新
-        let titleText = 'スマート問診アプリ';
-        if (currentForm === 'ipss') {
-            titleText = 'IPSS-QOLスコア';
-        } else if (currentForm === 'ctcae') {
-            titleText = 'CTCAE（前立腺癌）';
-        } else if (currentForm === 'epic') {
-            titleText = 'EPIC（前立腺癌QOL）';
-        } else if (currentForm === 'eq5d') {
-            titleText = 'EQ-5D';
-        }
-        $('h1').text(titleText);
+        // メール本文を作成
+        const mailBody = encodeURIComponent(formattedText + psaText);
         
-        // ナビゲーションボタンの表示を更新
-        updateNavigationButtons();
-        
-        // ページの一番上にスクロール
-        window.scrollTo(0, 0);
-    }
-
-    // 変換ボタンのクリックイベント
-    $('#convertButton').click(function() {
-        const inputData = $('#importData').val().trim();
-        
-        if (!inputData) {
-            alert('データを入力してください。');
-            return;
-        }
-        
-        try {
-            // 入力データを解析してCSVに変換
-            const csvData = convertToCSV(inputData);
-            
-            // 結果を表示
-            $('#csvOutput').val(csvData);
-            $('#csvResult').show();
-        } catch (error) {
-            alert('データの解析に失敗しました。正しい形式のデータを入力してください。\nエラー: ' + error.message);
-        }
+        // メールクライアントを開く（確認なしで直接開く）
+        window.location.href = `mailto:example@example.com?subject=問診結果&body=${mailBody}`;
     });
-
-    // コピーボタンのクリックイベント
-    $('#copyButton').click(function() {
-        const csvOutput = document.getElementById('csvOutput');
-        csvOutput.select();
-        document.execCommand('copy');
-        
-        // コピー成功のフィードバック
-        const originalText = $(this).text();
-        $(this).text('コピーしました！');
-        setTimeout(() => {
-            $(this).text(originalText);
-        }, 2000);
-    });
-
-    // 戻るボタンのクリックイベント
-    $('#backButton').click(function() {
-        // 読み込みツールフォームを非表示
-        $('#importToolForm').hide();
-        $('#csvResult').hide();
-        
-        // 項目選択部分を表示
-        $('.item-selection').show();
-        
-        // タイトルを更新
-        $('h1').text('スマート問診アプリ');
-        
-        // 入力フィールドをクリア
-        $('#importData').val('');
-        $('#csvOutput').val('');
-        
-        // ページの一番上にスクロール
-        window.scrollTo(0, 0);
-    });
-
-    // 入力データをCSVに変換する関数
-    function convertToCSV(inputData) {
-        // 入力データを行ごとに分割
-        const lines = inputData.split('\n');
-        
-        // 入力日を取得
-        let inputDate = '';
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].startsWith('入力日：')) {
-                inputDate = lines[i].replace('入力日：', '').trim();
-                break;
-            }
-        }
-        
-        // 各フォームのデータを抽出
-        const formData = {};
-        let currentForm = '';
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            // フォームのタイトル行を検出
-            if (line.startsWith('【') && line.endsWith('】')) {
-                currentForm = line.substring(1, line.length - 1);
-                formData[currentForm] = { 
-                    scores: [], 
-                    items: [],
-                    urinaryScores: [],
-                    bowelScores: [],
-                    sexualScores: [],
-                    hormoneScores: [],
-                    satisfactionScore: null
-                };
-                continue;
-            }
-            
-            // 各フォームのスコアデータを抽出（コロンの後のスペースの有無に対応）
-            if (currentForm && (line.includes('：') || line.includes(':'))) {
-                // コロンで分割（全角コロンと半角コロンの両方に対応）
-                const parts = line.split(/[：:]/);
-                const key = parts[0].trim();
-                let value = parts[1].trim();
-                
-                if (key === 'IPSS-QOL') {
-                    formData[currentForm].scores = value.split('-').map(v => parseInt(v, 10));
-                } else if (key === 'EQ-5D') {
-                    formData[currentForm].scores = value.split('-').map(v => parseInt(v, 10));
-                } else if (key === '排尿の状態') {
-                    formData[currentForm].urinaryScores = value.split('-').map(v => parseInt(v, 10));
-                } else if (key === '排便とおなかの状態') {
-                    formData[currentForm].bowelScores = value.split('-').map(v => parseInt(v, 10));
-                } else if (key === '性機能') {
-                    formData[currentForm].sexualScores = value.split('-').map(v => parseInt(v, 10));
-                } else if (key === 'ホルモン機能') {
-                    formData[currentForm].hormoneScores = value.split('-').map(v => parseInt(v, 10));
-                } else if (key === '全体的な満足度') {
-                    formData[currentForm].satisfactionScore = parseInt(value, 10);
-                } else if (key === '健康状態(VAS)') {
-                    // EQ-5Dの場合、VAS値を抽出
-                    const vasValue = parseInt(value.split('/')[0], 10);
-                    if (!isNaN(vasValue)) {
-                        formData[currentForm].scores.push(vasValue);
-                    }
-                } else if (key !== '文書コード' && key !== 'IPSS-QOL合計点') {
-                    // CTCAEの項目を抽出
-                    const gradeMatch = value.match(/Grade (\d+)/);
-                    if (gradeMatch) {
-                        const grade = Number(gradeMatch[1]);
-                        formData[currentForm].items.push({ name: key, grade });
-                    }
-                }
-            }
-        }
-        
-        // デバッグ用：EPICデータの確認
-        console.log("EPIC Data:", formData['EPIC（前立腺癌QOL）']);
-        
-        // CSVデータを生成
-        let csvRows = [];
-        
-        // IPSSのCSV生成
-        if (formData['IPSS-QOLスコア']) {
-            const ipssHeaders = ['入力日', '残尿感', '頻尿', '尿線途絶', '尿意切迫感', '尿勢低下', '腹圧排尿', '夜間頻尿', 'QOL'];
-            
-            csvRows.push(['IPSS-QOLスコア']);
-            csvRows.push([...ipssHeaders]);
-            csvRows.push([inputDate, ...formData['IPSS-QOLスコア'].scores]);
-            csvRows.push([]);  // 空行を追加
-        }
-        
-        // EQ-5DのCSV生成
-        if (formData['EQ-5D']) {
-            const eq5dHeaders = ['入力日', '移動の程度', '身の回りの管理', 'ふだんの活動', '痛み/不快感', '不安/ふさぎ込み', '健康状態(VAS)'];
-            
-            csvRows.push(['EQ-5D']);
-            csvRows.push([...eq5dHeaders]);
-            csvRows.push([inputDate, ...formData['EQ-5D'].scores]);
-            csvRows.push([]);  // 空行を追加
-        }
-        
-        // EPICのCSV生成
-        if (formData['EPIC（前立腺癌QOL）']) {
-            const epicData = formData['EPIC（前立腺癌QOL）'];
-            
-            // EPIC全体のデータを表示
-            csvRows.push(['EPIC（前立腺癌QOL）']);
-            
-            // すべてのヘッダーを結合
-            const allHeaders = ['入力日'];
-            
-            // 排尿の状態（問1～問7）のヘッダー
-            if (epicData.urinaryScores && epicData.urinaryScores.length > 0) {
-                for (let i = 1; i <= 5; i++) {
-                    allHeaders.push(`排尿Q${i}`);
-                }
-                for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    allHeaders.push(`排尿Q6${letter}`);
-                }
-                allHeaders.push('排尿Q7');
-            }
-            
-            // 排便とおなかの状態（問8～問16）のヘッダー
-            if (epicData.bowelScores && epicData.bowelScores.length > 0) {
-                for (let i = 8; i <= 14; i++) {
-                    allHeaders.push(`排便Q${i}`);
-                }
-                for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    allHeaders.push(`排便Q15${letter}`);
-                }
-                allHeaders.push('排便Q16');
-            }
-            
-            // 性機能（問17～問25）のヘッダー
-            if (epicData.sexualScores && epicData.sexualScores.length > 0) {
-                for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    allHeaders.push(`性機能Q17${letter}`);
-                }
-                for (let i = 18; i <= 23; i++) {
-                    allHeaders.push(`性機能Q${i}`);
-                }
-                for (let c = 'a'.charCodeAt(0); c <= 'c'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    allHeaders.push(`性機能Q24${letter}`);
-                }
-                allHeaders.push('性機能Q25');
-            }
-            
-            // ホルモン機能（問26～問31）のヘッダー
-            if (epicData.hormoneScores && epicData.hormoneScores.length > 0) {
-                for (let i = 26; i <= 30; i++) {
-                    allHeaders.push(`ホルモンQ${i}`);
-                }
-                for (let c = 'a'.charCodeAt(0); c <= 'f'.charCodeAt(0); c++) {
-                    const letter = String.fromCharCode(c);
-                    allHeaders.push(`ホルモンQ31${letter}`);
-                }
-            }
-            
-            // 全体的な満足度のヘッダー
-            if (epicData.satisfactionScore !== null) {
-                allHeaders.push('満足度Q32');
-            }
-            
-            // ヘッダー行を追加
-            csvRows.push(allHeaders);
-            
-            // すべての値を結合
-            const allValues = [inputDate];
-            
-            // 排尿の状態の値
-            if (epicData.urinaryScores && epicData.urinaryScores.length > 0) {
-                allValues.push(...epicData.urinaryScores);
-            }
-            
-            // 排便とおなかの状態の値
-            if (epicData.bowelScores && epicData.bowelScores.length > 0) {
-                allValues.push(...epicData.bowelScores);
-            }
-            
-            // 性機能の値
-            if (epicData.sexualScores && epicData.sexualScores.length > 0) {
-                allValues.push(...epicData.sexualScores);
-            }
-            
-            // ホルモン機能の値
-            if (epicData.hormoneScores && epicData.hormoneScores.length > 0) {
-                allValues.push(...epicData.hormoneScores);
-            }
-            
-            // 全体的な満足度の値
-            if (epicData.satisfactionScore !== null) {
-                allValues.push(epicData.satisfactionScore);
-            }
-            
-            // 値の行を追加
-            csvRows.push(allValues);
-            csvRows.push([]);  // 空行を追加
-        }
-        
-        // CTCAEのCSV生成
-        if (formData['CTCAE（前立腺癌）']) {
-            const ctcaeItems = formData['CTCAE（前立腺癌）'].items;
-            if (ctcaeItems.length > 0) {
-                csvRows.push(['CTCAE（前立腺癌）']);
-                csvRows.push(['入力日', ...ctcaeItems.map(item => item.name)]);
-                csvRows.push(['', ...ctcaeItems.map(() => 'Grade')]);
-                csvRows.push([inputDate, ...ctcaeItems.map(item => item.grade)]);
-            }
-        }
-        
-        // 配列をタブ区切りのCSV文字列に変換
-        return csvRows.map(row => row.join('\t')).join('\n');
-    }
 });
